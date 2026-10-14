@@ -36,17 +36,23 @@ export const mission5: MissionScript = {
         {
           text: 'Udah ngeles aja Bud! Bikin klarifikasi bohong kalau akun lo waktu itu di-hack orang lain.',
           points: 0,
-          nextNodeId: 'node_lie_hack_fatal'
+          nextNodeId: 'node_lie_hack_fatal',
+          targetApp: 'chat',
+          targetView: 'room'
         },
         {
           text: 'Jangan mau kalah! Kita cari juga aib masa lalu kubu lawan, terus kita viralin balik biar seri!',
           points: 0,
-          nextNodeId: 'node_revenge_toxic_fatal'
+          nextNodeId: 'node_revenge_toxic_fatal',
+          targetApp: 'chat',
+          targetView: 'room'
         },
         {
           text: 'Jangan bohong Bud. Hadapi secara ksatria: bikin video permintaan maaf tulus, akui kesalahan masa lalu, dan buktikan lo sudah dewasa.',
           points: 3,
-          nextNodeId: 'node_apology_mature_success'
+          nextNodeId: 'node_apology_mature_success',
+          targetApp: 'instapic',
+          targetView: 'apology_video'
         }
       ]
     },

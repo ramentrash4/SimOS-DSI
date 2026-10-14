@@ -26,7 +26,7 @@ type BrowserView = 'search_home' | 'school_official' | 'fake_blog' | 'forum_pela
 
 export default function BrowserApp() {
   const { openApp, showBanner, isDarkMode, hasProofScreenshot, setHasProofScreenshot } = useSimOSStore();
-  const { advanceNode, script, activeSessionId } = useChatStore();
+  const { advanceNode, script, activeSessionId, highlightedDecisionNodeId } = useChatStore();
   
   const isMission2 = script?.id === 'm2';
 
@@ -66,6 +66,31 @@ export default function BrowserApp() {
     setShowAttributionBuilder(false);
     setCopiedAttribution(false);
   }, [activeSessionId, script?.id]);
+
+  // Synchronize view with highlighted decision during review mode
+  useEffect(() => {
+    if (!highlightedDecisionNodeId) return;
+
+    if (
+      highlightedDecisionNodeId === 'node_use_creative_commons' ||
+      highlightedDecisionNodeId === 'node_steal_pinterest_fatal' ||
+      highlightedDecisionNodeId === 'node_plain_poster_partial' ||
+      highlightedDecisionNodeId.includes('pinterest') ||
+      highlightedDecisionNodeId.includes('creative_commons')
+    ) {
+      setCurrentView('image_search');
+      setCurrentUrl('https://pinterest.com/search/fox-mascot');
+    } else if (
+      highlightedDecisionNodeId === 'school_official_verified' ||
+      highlightedDecisionNodeId === 'node_open_browser_flow' ||
+      highlightedDecisionNodeId.includes('official')
+    ) {
+      setCurrentView('school_official');
+      setCurrentUrl('https://sman1-official.sch.id/klarifikasi-hoax');
+      setHighlightedParagraph(2);
+      setHasFoundProof(true);
+    }
+  }, [highlightedDecisionNodeId]);
 
   const searchResultsL1 = [
     {
@@ -157,6 +182,27 @@ export default function BrowserApp() {
     setTimeout(() => setIsFlashing(false), 300);
     setHasProofScreenshot(true);
     setIsScreenshotTaken(true);
+
+    useChatStore.getState().recordDecision({
+      stepTitle: 'Verifikasi Fakta di Website Resmi',
+      prompt: 'Pengecekan Kebenaran Pengumuman Libur Sekolah',
+      chosenText: 'Menemukan & Menandai Klarifikasi Resmi di sman1-official.sch.id',
+      points: 3,
+      nodeId: 'school_official_verified',
+      targetApp: 'browser',
+      targetView: 'school_official',
+      alternatives: [
+        { text: 'Meneruskan Link Blogspot Palsu Tanpa Cek', points: 0 },
+        { text: 'Menandai Surat Edaran Resmi di Portal Sekolah', points: 3 }
+      ],
+      causalityAnalysis: {
+        riskLevel: 'Aman',
+        mechanism: 'Melakukan verifikasi lateral ke domain resmi terpercaya (.sch.id) sebelum menyebarkan kabar.',
+        consequence: 'Mencegah kepanikan massal di lingkungan sekolah dan menangkal penyebaran malware phishing.',
+        bestPracticeRecommendation: 'Selalu prioritaskan kanal resmi lembaga pemerintah atau institusi pendidikan berdomain terverifikasi.'
+      }
+    });
+
     showBanner({
       app: 'chat',
       sender: 'Kamera / Galeri',
@@ -182,6 +228,8 @@ export default function BrowserApp() {
         chosenText: 'Mengambil Gambar Rubah dari Pinterest (Art by Bayu)',
         points: 0,
         nodeId: 'node_steal_pinterest_fatal',
+        targetApp: 'browser',
+        targetView: 'image_search',
         alternatives: [
           { text: 'Pinterest (Karya Seniman Berhak Cipta)', points: 0 },
           { text: 'Freepik / Unsplash (Creative Commons CC-BY)', points: 3 },
@@ -208,6 +256,8 @@ export default function BrowserApp() {
         chosenText: 'Menggunakan Vektor Rubah Berlisensi Creative Commons (CC-BY)',
         points: 3,
         nodeId: 'node_use_creative_commons',
+        targetApp: 'browser',
+        targetView: 'image_search',
         alternatives: [
           { text: 'Pinterest (Karya Seniman Berhak Cipta)', points: 0 },
           { text: 'Freepik / Unsplash (Creative Commons CC-BY)', points: 3 },
@@ -234,6 +284,8 @@ export default function BrowserApp() {
         chosenText: 'Menggunakan Desain Tipografi Polos Tanpa Maskot',
         points: 2,
         nodeId: 'node_plain_poster_partial',
+        targetApp: 'browser',
+        targetView: 'image_search',
         alternatives: [
           { text: 'Pinterest (Karya Seniman Berhak Cipta)', points: 0 },
           { text: 'Freepik / Unsplash (Creative Commons CC-BY)', points: 3 },
@@ -429,6 +481,12 @@ export default function BrowserApp() {
         {/* VIEW 2: OFFICIAL SCHOOL WEBSITE (REAL FACT CHECK MINIGAME) */}
         {currentView === 'school_official' && (
           <div className="p-3.5 space-y-3 animate-in fade-in duration-300">
+            {(highlightedDecisionNodeId === 'school_official_verified' || highlightedDecisionNodeId === 'node_open_browser_flow') && (
+              <div className="bg-emerald-600 text-white p-2.5 rounded-xl text-center text-xs font-bold animate-pulse flex items-center justify-center space-x-1.5 shadow-md">
+                <ShieldCheck size={16} />
+                <span>Sedang Dianalisis: Verifikasi Lateral di Portal Resmi (.sch.id)</span>
+              </div>
+            )}
             {/* School Header */}
             <div className={`p-3 rounded-xl border shadow-sm flex items-center justify-between ${
               isDarkMode ? 'bg-[#1c1c1e] border-neutral-800' : 'bg-white border-gray-200'
@@ -731,8 +789,18 @@ export default function BrowserApp() {
 
             {/* CARD 1: PINTEREST (COPYRIGHTED ARTIST ASSET) */}
             <div className={`border rounded-2xl overflow-hidden shadow-sm transition-all ${
+              highlightedDecisionNodeId === 'node_steal_pinterest_fatal'
+                ? 'ring-4 ring-rose-500 shadow-[0_0_25px_rgba(244,63,94,0.6)] scale-[1.01]'
+                : ''
+            } ${
               isDarkMode ? 'bg-[#1c1c1e] border-rose-900/50' : 'bg-white border-rose-200'
             }`}>
+              {highlightedDecisionNodeId === 'node_steal_pinterest_fatal' && (
+                <div className="bg-rose-600 text-white p-2 text-center text-xs font-bold animate-pulse flex items-center justify-center space-x-1">
+                  <ShieldAlert size={14} />
+                  <span>Sedang Dianalisis: Aset Berhak Cipta yang Dipotong Watermark</span>
+                </div>
+              )}
               <div className="p-2.5 bg-rose-500/10 border-b border-rose-500/20 flex items-center justify-between">
                 <div className="flex items-center space-x-1.5 text-rose-500 font-bold text-[11px]">
                   <ShieldAlert size={14} />
@@ -797,8 +865,18 @@ export default function BrowserApp() {
 
             {/* CARD 2: CREATIVE COMMONS OPEN SOURCE ASSET */}
             <div className={`border rounded-2xl overflow-hidden shadow-sm transition-all ${
+              highlightedDecisionNodeId === 'node_use_creative_commons'
+                ? 'ring-4 ring-emerald-500 shadow-[0_0_25px_rgba(16,185,129,0.6)] scale-[1.01]'
+                : ''
+            } ${
               isDarkMode ? 'bg-[#1c1c1e] border-emerald-900/50' : 'bg-white border-emerald-200'
             }`}>
+              {highlightedDecisionNodeId === 'node_use_creative_commons' && (
+                <div className="bg-emerald-600 text-white p-2 text-center text-xs font-bold animate-pulse flex items-center justify-center space-x-1">
+                  <CheckCircle2 size={14} />
+                  <span>Sedang Dianalisis: Vektor Lisensi Terbuka (CC-BY 4.0 Bebas Pakai)</span>
+                </div>
+              )}
               <div className="p-2.5 bg-emerald-500/10 border-b border-emerald-500/20 flex items-center justify-between">
                 <div className="flex items-center space-x-1.5 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
                   <CheckCircle2 size={14} />
@@ -865,8 +943,17 @@ export default function BrowserApp() {
 
             {/* CARD 3: TYPOGRAPHY MINIMALIST */}
             <div className={`border rounded-2xl overflow-hidden shadow-sm transition-all ${
+              highlightedDecisionNodeId === 'node_plain_poster_partial'
+                ? 'ring-4 ring-neutral-400 shadow-[0_0_25px_rgba(163,163,163,0.6)] scale-[1.01]'
+                : ''
+            } ${
               isDarkMode ? 'bg-[#1c1c1e] border-neutral-800' : 'bg-white border-neutral-200'
             }`}>
+              {highlightedDecisionNodeId === 'node_plain_poster_partial' && (
+                <div className="bg-neutral-600 text-white p-2 text-center text-xs font-bold animate-pulse flex items-center justify-center space-x-1">
+                  <span>Sedang Dianalisis: Desain Tipografi Polos Tanpa Maskot</span>
+                </div>
+              )}
               <div className="p-2.5 bg-neutral-500/10 border-b border-neutral-500/20 flex items-center justify-between">
                 <div className="flex items-center space-x-1.5 text-neutral-400 font-bold text-[11px]">
                   <Sparkles size={14} />

@@ -41,17 +41,23 @@ export const mission4: MissionScript = {
         {
           text: 'Langsung klik unduh dan pasang filenya karena penasaran paket apa yang datang.',
           points: 0,
-          nextNodeId: 'download_apk_fatal'
+          nextNodeId: 'download_apk_fatal',
+          targetApp: 'messages',
+          targetView: 'bank'
         },
         {
           text: 'Tanya balik: "Paket apa ya pak? Saya tidak merasa pesan barang COD."',
           points: 1,
-          nextNodeId: 'node_courier_threat'
+          nextNodeId: 'node_courier_threat',
+          targetApp: 'chat',
+          targetView: 'room'
         },
         {
           text: 'Jeda Kritis: Sadar ekstensi .APK adalah aplikasi berbahaya (bukan .JPG). Langsung tolak dan blokir nomor!',
           points: 3,
-          nextNodeId: 'node_block_courier_safe'
+          nextNodeId: 'node_block_courier_safe',
+          targetApp: 'chat',
+          targetView: 'room'
         }
       ]
     },
@@ -67,8 +73,8 @@ export const mission4: MissionScript = {
     node_sms_otp_stolen: {
       type: 'message',
       sender: 'system',
-      text: '[SYSTEM_ACTION:sms:BANK_ALERT:Kode OTP e-Wallet Anda adalah 4812. JANGAN BERIKAN KE SIAPAPUN!] [SYSTEM_ACTION:shake] 📩 Notifikasi SMS Masuk: Kode OTP Rekening Anda disadap!',
-      delay: 3000,
+      text: '[SYSTEM_ACTION:openApp:messages] [SYSTEM_ACTION:sms:BANK_ALERT:Kode OTP e-Wallet Anda adalah 4812. JANGAN BERIKAN KE SIAPAPUN!] [SYSTEM_ACTION:shake] 📩 Notifikasi SMS Masuk: Kode OTP Rekening Anda disadap!',
+      delay: 2400,
       nextNodeId: 'node_sms_drain_money'
     },
     node_sms_drain_money: {
@@ -150,12 +156,16 @@ export const mission4: MissionScript = {
         {
           text: 'Takut kena denda... Akhirnya menekan dan mengunduh file APK tersebut.',
           points: 0,
-          nextNodeId: 'download_apk_fatal'
+          nextNodeId: 'download_apk_fatal',
+          targetApp: 'messages',
+          targetView: 'bank'
         },
         {
           text: 'Sadar ini manipulasi Social Engineering! Gertakan denda adalah trik penipu. Blokir nomornya sekarang juga!',
           points: 3,
-          nextNodeId: 'node_block_courier_safe'
+          nextNodeId: 'node_block_courier_safe',
+          targetApp: 'chat',
+          targetView: 'room'
         }
       ]
     },

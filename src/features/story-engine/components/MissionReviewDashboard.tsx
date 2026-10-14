@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useChatStore } from '@/store/chat';
+import { useSimOSStore, type AppName } from '@/store/simos';
 import { useAuthUser } from '@/services/auth';
 import { useSaveMissionProgress } from '@/services/mission';
 import { Button } from '@/components/ui/button';
@@ -24,7 +25,6 @@ import {
   Flame,
   Info
 } from 'lucide-react';
-import { useEffect } from 'react';
 import type { PlayerDecision } from '@/types/mission';
 
 interface MissionReviewDashboardProps {
@@ -73,6 +73,7 @@ export default function MissionReviewDashboard({ onTogglePhoneView }: MissionRev
           chosenText: debriefCard?.summary || 'Tindakan simulasi',
           points: debriefCard?.stars || 1,
           nodeId: 'end',
+          targetApp: 'chat',
           alternatives: [],
           timestamp: new Date(),
           causalityAnalysis: {
@@ -90,12 +91,83 @@ export default function MissionReviewDashboard({ onTogglePhoneView }: MissionRev
 
   const currentDecision = effectiveDecisions[selectedDecisionIndex] || effectiveDecisions[0];
 
-  // Synchronize phone view with currently analyzed decision
-  useEffect(() => {
-    if (currentDecision?.nodeId) {
-      useChatStore.getState().setHighlightedDecisionNodeId(currentDecision.nodeId);
+  // Helper to determine target app from decision metadata or smart inference
+  const getTargetAppForDecision = (decision?: PlayerDecision): AppName => {
+    if (!decision) return 'chat';
+    if (decision.targetApp) return decision.targetApp as AppName;
+
+    const nid = (decision.nodeId || '').toLowerCase();
+    const ctext = (decision.chosenText || '').toLowerCase();
+    const ptext = (decision.prompt || '').toLowerCase();
+
+    if (
+      nid.includes('browser') || 
+      nid.includes('safari') || 
+      nid.includes('pinterest') || 
+      nid.includes('creative_commons') || 
+      nid.includes('sch.id') ||
+      nid.includes('school_official') ||
+      ctext.includes('safari') || 
+      ctext.includes('browser') || 
+      ctext.includes('pinterest') || 
+      ctext.includes('creative commons') ||
+      ptext.includes('sumber gambar') ||
+      ptext.includes('portal resmi')
+    ) {
+      return 'browser';
     }
-  }, [currentDecision?.nodeId]);
+
+    if (
+      nid.includes('instapic') || 
+      nid.includes('flame_war') || 
+      nid.includes('attack_back') || 
+      nid.includes('footprint') || 
+      nid.includes('lambe') || 
+      nid.includes('budi_lie') || 
+      nid.includes('apology') || 
+      nid.includes('bully') ||
+      ctext.includes('instapic') || 
+      ctext.includes('komentar') || 
+      ctext.includes('maya') ||
+      ctext.includes('klarifikasi') ||
+      ptext.includes('komentar') ||
+      ptext.includes('instapic') ||
+      ptext.includes('maya')
+    ) {
+      return 'instapic';
+    }
+
+    if (
+      nid.includes('sms') || 
+      nid.includes('otp') || 
+      nid.includes('bank') || 
+      ctext.includes('otp') || 
+      ctext.includes('saldo') || 
+      ptext.includes('otp')
+    ) {
+      return 'messages';
+    }
+
+    return 'chat';
+  };
+
+  // Synchronize phone view with currently analyzed decision across all apps
+  useEffect(() => {
+    if (!currentDecision) return;
+
+    const targetApp = getTargetAppForDecision(currentDecision);
+
+    // 1. Open the target app on the phone simulation
+    useSimOSStore.getState().openApp(targetApp);
+
+    // 2. If chat, ensure user is inside active contact room so message can be highlighted
+    if (targetApp === 'chat') {
+      useSimOSStore.getState().setActiveContactId('active');
+    }
+
+    // 3. Set highlighted decision node ID across apps
+    useChatStore.getState().setHighlightedDecisionNodeId(currentDecision.nodeId);
+  }, [currentDecision?.nodeId, currentDecision?.targetApp]);
 
   if (!debriefCard) return null;
 
@@ -332,15 +404,30 @@ export default function MissionReviewDashboard({ onTogglePhoneView }: MissionRev
               
               {/* Selected Choice Header */}
               <div className="bg-neutral-900/80 border border-neutral-800 rounded-2xl p-5 shadow-lg">
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
                   <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider flex items-center space-x-1.5">
                     <Clock size={13} className="text-blue-400" />
                     <span>Langkah #{selectedDecisionIndex + 1}: {currentDecision.prompt}</span>
                   </span>
 
-                  <span className="text-xs font-mono text-neutral-400">
-                    Nilai Bobot: <strong className="text-yellow-400">{currentDecision.points} Bintang</strong>
-                  </span>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-500/15 text-blue-300 border border-blue-500/30 flex items-center shadow-sm">
+                      <Smartphone size={11} className="mr-1 text-blue-400" />
+                      Layar HP Terkait:
+                      <strong className="ml-1 text-white uppercase font-mono">
+                        {getTargetAppForDecision(currentDecision) === 'chat' 
+                          ? 'WhatsApp' 
+                          : getTargetAppForDecision(currentDecision) === 'browser' 
+                          ? 'Safari' 
+                          : getTargetAppForDecision(currentDecision) === 'instapic' 
+                          ? 'InstaPic' 
+                          : 'SMS Bank'}
+                      </strong>
+                    </span>
+                    <span className="text-xs font-mono text-neutral-400">
+                      Nilai: <strong className="text-yellow-400">{currentDecision.points} Bintang</strong>
+                    </span>
+                  </div>
                 </div>
 
                 <div className="bg-neutral-950 p-4 rounded-xl border border-neutral-800/80 mt-2">

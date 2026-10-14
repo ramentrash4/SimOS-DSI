@@ -11,6 +11,8 @@ export interface PlayerDecision {
   chosenText: string;
   points: number;
   nodeId: string;
+  targetApp?: 'home' | 'chat' | 'gallery' | 'notes' | 'browser' | 'instapic' | 'messages';
+  targetView?: string;
   alternatives: { text: string; points: number }[];
   timestamp: Date;
   causalityAnalysis?: {
@@ -53,15 +55,19 @@ export type MessageNode = {
   nextNodeId: string | null;
 };
 
+export type ChoiceOption = {
+  text: string;
+  points: number; // 0 = fatal/fail, 1-3 points
+  nextNodeId: string | null;
+  isForwardAction?: boolean;
+  targetApp?: 'home' | 'chat' | 'gallery' | 'notes' | 'browser' | 'instapic' | 'messages';
+  targetView?: string;
+};
+
 export type ChoiceNode = {
   type: 'choice';
   prompt?: string;
-  options: {
-    text: string;
-    points: number; // 0 = fatal/fail, 1-3 points
-    nextNodeId: string | null;
-    isForwardAction?: boolean;
-  }[];
+  options: ChoiceOption[];
 };
 
 export type GameOverNode = {

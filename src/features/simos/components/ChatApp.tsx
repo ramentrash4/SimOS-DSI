@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useChatStore } from '@/store/chat';
 import { useSimOSStore } from '@/store/simos';
+import { sfx } from '@/utils/audio';
 import { 
   ChevronLeft, 
   Send, 
@@ -25,7 +26,8 @@ import {
   MessageSquare,
   Sparkles,
   ShieldCheck,
-  AlertOctagon
+  AlertOctagon,
+  AlertTriangle
 } from 'lucide-react';
 import ForwardMessageModal from './ForwardMessageModal';
 import SpamBroadcastAnimation from './SpamBroadcastAnimation';
@@ -67,8 +69,10 @@ export default function ChatApp() {
   const [viewingStory, setViewingStory] = useState<{ name: string; avatarSeed: string; time: string; text: string; bg?: string } | null>(null);
   const [pendingForwardIndex, setPendingForwardIndex] = useState<number | null>(null);
 
-  // Level 4: Interactive Sandbox File & Permission Inspector
+  // Level 4: Interactive Sandbox File & Permission Inspector & Package Installer
   const [inspectingApkAttachment, setInspectingApkAttachment] = useState<{ fileName: string; fileSize: string } | null>(null);
+  const [isInstallingApk, setIsInstallingApk] = useState(false);
+  const [installProgress, setInstallProgress] = useState(0);
 
   // Reset local states when mission restarts or session changes
   useEffect(() => {
@@ -78,7 +82,26 @@ export default function ChatApp() {
     setViewingStory(null);
     setPendingForwardIndex(null);
     setInspectingApkAttachment(null);
+    setIsInstallingApk(false);
+    setInstallProgress(0);
   }, [activeSessionId]);
+
+  const triggerApkInstallation = () => {
+    setInspectingApkAttachment(null);
+    setIsInstallingApk(true);
+    setInstallProgress(15);
+    sfx.playSend();
+
+    setTimeout(() => setInstallProgress(50), 350);
+    setTimeout(() => setInstallProgress(85), 750);
+    setTimeout(() => {
+      setInstallProgress(100);
+      sfx.playGlitch();
+      useSimOSStore.getState().setGlitchLevel(2);
+      setIsInstallingApk(false);
+      advanceNode('download_apk_fatal');
+    }, 1200);
+  };
 
   const missionId = script?.id || 'm1';
 
@@ -1323,14 +1346,42 @@ interface ChatContact {
               </button>
 
               <button
-                onClick={() => {
-                  setInspectingApkAttachment(null);
-                  advanceNode('download_apk_fatal');
-                }}
-                className="w-full border border-rose-800/80 text-rose-400 hover:bg-rose-950/40 text-xs py-1.5 rounded-xl transition-colors font-medium"
+                onClick={triggerApkInstallation}
+                className="w-full border border-rose-800/80 text-rose-400 hover:bg-rose-950/40 text-xs py-1.5 rounded-xl transition-colors font-medium active:scale-98"
               >
                 <span>Bypass Sandbox & Pasang Tetap Lanjut (Risiko Tinggi)</span>
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* REALISTIC ANDROID SYSTEM PACKAGE INSTALLER MODAL */}
+      {isInstallingApk && (
+        <div className="absolute inset-0 z-50 bg-black/85 backdrop-blur-md flex flex-col items-center justify-center p-6 animate-in fade-in select-none">
+          <div className="w-full max-w-xs bg-neutral-900 border border-neutral-700 rounded-3xl p-5 text-center shadow-2xl space-y-4 animate-in zoom-in-95">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 border border-neutral-700 mx-auto flex items-center justify-center text-3xl shadow-lg">
+              📦
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white">Penginstal Paket Android</h3>
+              <p className="text-xs text-neutral-400 font-mono mt-0.5">Foto_Resi_Paket.apk</p>
+            </div>
+            <div className="space-y-1">
+              <div className="flex justify-between text-[11px] font-mono text-neutral-400">
+                <span>Memasang berkas...</span>
+                <span className="text-emerald-400 font-bold">{installProgress}%</span>
+              </div>
+              <div className="w-full bg-neutral-800 rounded-full h-2.5 overflow-hidden border border-neutral-700">
+                <div 
+                  className="bg-emerald-500 h-full rounded-full transition-all duration-300"
+                  style={{ width: `${installProgress}%` }}
+                />
+              </div>
+            </div>
+            <div className="text-[10px] text-rose-400 font-mono flex items-center justify-center space-x-1 bg-rose-500/10 border border-rose-500/20 p-2 rounded-xl">
+              <AlertTriangle size={12} className="text-rose-400 shrink-0" />
+              <span>Izin berbahaya diaktifkan: RECEIVE_SMS, READ_CONTACTS</span>
             </div>
           </div>
         </div>

@@ -37,17 +37,23 @@ export const mission2: MissionScript = {
         {
           text: 'Oke Rian! Aku buka Safari sekarang buat cari bahan gambar maskot.',
           points: 1,
-          nextNodeId: 'node_guide_browser'
+          nextNodeId: 'node_guide_browser',
+          targetApp: 'browser',
+          targetView: 'image_search'
         },
         {
           text: 'Hati-hati Rian! Jangan asal comot di Pinterest tanpa lisensi. Aku carikan gambar berlisensi legal di Safari.',
           points: 3,
-          nextNodeId: 'node_guide_browser'
+          nextNodeId: 'node_guide_browser',
+          targetApp: 'browser',
+          targetView: 'image_search'
         },
         {
           text: 'Mending poster kita polos pakai tipografi tegas aja daripada risiko sengketa hak cipta!',
           points: 2,
-          nextNodeId: 'node_plain_poster_partial'
+          nextNodeId: 'node_plain_poster_partial',
+          targetApp: 'chat',
+          targetView: 'room'
         }
       ]
     },
@@ -56,7 +62,7 @@ export const mission2: MissionScript = {
       sender: 'npc',
       npcName: 'Rian (Ketua Panitia)',
       avatarSeed: 'Rian',
-      text: '[SYSTEM_ACTION:suggestApp:browser:Safari:Buka Safari & Pilih Gambar Maskot] Siap, buka aplikasi Safari di ponselmu sekarang ya! Bandingkan lisensi gambar yang kamu temukan, lalu ketuk tombol "Pilih Gambar Ini"!',
+      text: '[SYSTEM_ACTION:openApp:browser] [SYSTEM_ACTION:suggestApp:browser:Safari:Buka Safari & Pilih Gambar Maskot] Siap, buka aplikasi Safari di ponselmu sekarang ya! Bandingkan lisensi gambar yang kamu temukan, lalu ketuk tombol "Pilih Gambar Ini"!',
       delay: 1200,
       nextNodeId: null
     },

@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { ChevronLeft, ShieldAlert, CreditCard, KeyRound, Search, Send, CheckCheck } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ChevronLeft, ShieldAlert, CreditCard, KeyRound, Search, Send, CheckCheck, AlertOctagon } from 'lucide-react';
 import { useSimOSStore } from '@/store/simos';
+import { useChatStore } from '@/store/chat';
 
 interface SmsThread {
   id: string;
@@ -20,7 +21,20 @@ interface SmsThread {
 
 export default function MessagesApp() {
   const { openApp } = useSimOSStore();
+  const { highlightedDecisionNodeId } = useChatStore();
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
+
+  // Synchronize active thread with highlighted decision in review mode
+  useEffect(() => {
+    if (highlightedDecisionNodeId) {
+      const nid = highlightedDecisionNodeId.toLowerCase();
+      if (nid.includes('download_apk') || nid.includes('malware') || nid.includes('bank') || nid.includes('saldo')) {
+        setActiveThreadId('bank');
+      } else if (nid.includes('otp')) {
+        setActiveThreadId('otp');
+      }
+    }
+  }, [highlightedDecisionNodeId]);
 
   const threads: SmsThread[] = [
     {
@@ -118,6 +132,13 @@ export default function MessagesApp() {
                 Pemberitahuan Sistem Resmi
               </span>
             </div>
+
+            {highlightedDecisionNodeId && (
+              <div className="bg-rose-600 text-white p-2.5 rounded-xl text-center text-xs font-bold animate-pulse shadow-md flex items-center justify-center space-x-1.5">
+                <AlertOctagon size={14} />
+                <span>Sedang Dianalisis: Saldo Tabungan Terkuras oleh Malware Penyadap SMS</span>
+              </div>
+            )}
 
             {activeThread.messages.map((m) => (
               <div 

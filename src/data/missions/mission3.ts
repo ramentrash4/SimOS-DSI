@@ -45,17 +45,23 @@ export const mission3: MissionScript = {
         {
           text: 'Aku buka InstaPic sekarang buat laporkan komentar jahat Maya dan semangati Siska.',
           points: 3,
-          nextNodeId: 'node_report_and_dm'
+          nextNodeId: 'node_report_and_dm',
+          targetApp: 'instapic',
+          targetView: 'report_confirmed'
         },
         {
           text: 'Ah biarin aja Din, itu urusan mereka. Mending kita pura-pura gak lihat (Bystander).',
           points: 0,
-          nextNodeId: 'node_bystander_fatal'
+          nextNodeId: 'node_bystander_fatal',
+          targetApp: 'chat',
+          targetView: 'room'
         },
         {
           text: 'Kurang ajar si Maya! Aku mau serang balik dan maki penampilannya di kolom komentar!',
-          points: 2,
-          nextNodeId: 'node_attack_back_partial'
+          points: 1,
+          nextNodeId: 'node_attack_back_partial',
+          targetApp: 'instapic',
+          targetView: 'flame_war'
         }
       ]
     },
@@ -136,15 +142,15 @@ export const mission3: MissionScript = {
     node_attack_back_partial: {
       type: 'message',
       sender: 'player',
-      text: 'Woy Maya lo jahat banget! Lo sendiri ngaca dong muka lo kayak gimana sok-sokan ngatain Siska!',
+      text: '[SYSTEM_ACTION:openApp:instapic] [SYSTEM_ACTION:glitch:1] [SYSTEM_ACTION:shake] Woy Maya lo jahat banget! Lo sendiri ngaca dong muka lo kayak gimana sok-sokan ngatain Siska!',
       delay: 900,
       nextNodeId: 'node_system_flame_war'
     },
     node_system_flame_war: {
       type: 'message',
       sender: 'system',
-      text: '[SYSTEM_ACTION:glitch:1] [SYSTEM_ACTION:shake] 🔥 Terjadi perang komentar sengit antara kubumu dan kelompok Maya di linimasa publik! Notifikasi InstaPic jebol!',
-      delay: 1200,
+      text: '[SYSTEM_ACTION:glitch:2] [SYSTEM_ACTION:shake] [SYSTEM_ACTION:banner:maya_queenbee (DM InstaPic):Woy caper banget lu ikut campur urusan orang!] 🔥 Terjadi perang komentar sengit antara kubumu dan kelompok Maya di linimasa publik! Notifikasi InstaPic jebol!',
+      delay: 2800,
       nextNodeId: 'node_teacher_debrief_partial'
     },
     node_teacher_debrief_partial: {

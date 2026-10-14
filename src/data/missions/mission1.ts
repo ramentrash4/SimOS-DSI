@@ -38,17 +38,23 @@ export const mission1: MissionScript = {
           text: 'Wah asik libur! Langsung forward pesan Dina ke semua grup ekskul.',
           points: 0,
           nextNodeId: 'node_forward_fatal',
-          isForwardAction: true
+          isForwardAction: true,
+          targetApp: 'chat',
+          targetView: 'room'
         },
         {
           text: 'Din, serius ini? Dapat info dari mana? Tautannya kok blogspot aneh ya?',
           points: 1,
-          nextNodeId: 'node_dina_reply_clarify'
+          nextNodeId: 'node_dina_reply_clarify',
+          targetApp: 'chat',
+          targetView: 'room'
         },
         {
           text: 'Tunggu Din, jangan disebar dulu! Aku mau buka Browser cek website resmi sekolah dulu.',
           points: 2,
-          nextNodeId: 'node_open_browser_flow'
+          nextNodeId: 'node_open_browser_flow',
+          targetApp: 'browser',
+          targetView: 'school_official'
         }
       ]
     },
@@ -184,12 +190,16 @@ export const mission1: MissionScript = {
           text: 'Yaudah deh kalau dari kakak kelas pasti valid, aku bantu forward ya.',
           points: 0,
           nextNodeId: 'node_forward_fatal',
-          isForwardAction: true
+          isForwardAction: true,
+          targetApp: 'chat',
+          targetView: 'room'
         },
         {
           text: 'Jangan mudah percaya Din! Ayo kita cek ke website resmi SMAN 1 sekarang juga lewat Browser.',
           points: 2,
-          nextNodeId: 'node_open_browser_flow'
+          nextNodeId: 'node_open_browser_flow',
+          targetApp: 'browser',
+          targetView: 'school_official'
         }
       ]
     },
@@ -200,7 +210,7 @@ export const mission1: MissionScript = {
       sender: 'npc',
       npcName: 'Dina (Ketua Kelas)',
       avatarSeed: 'Dina',
-      text: '[SYSTEM_ACTION:suggestApp:browser:Safari:Cek keabsahan berita di portal sekolah] Bener juga kata kamu! Coba buka Safari sekarang terus cek pengumuman di portal resmi sman1-official.sch.id ya. Nanti kabarin aku di grup ini!',
+      text: '[SYSTEM_ACTION:openApp:browser] [SYSTEM_ACTION:suggestApp:browser:Safari:Cek keabsahan berita di portal sekolah] Bener juga kata kamu! Coba buka Safari sekarang terus cek pengumuman di portal resmi sman1-official.sch.id ya. Nanti kabarin aku di grup ini!',
       delay: 1300,
       nextNodeId: null
     },
@@ -220,7 +230,9 @@ export const mission1: MissionScript = {
         {
           text: 'Din, aku cek web resmi SMAN 1! Ada spanduk merah tegas: Berita Libur Besok HOAX! Tarik pesanmu sekarang!',
           points: 3,
-          nextNodeId: 'node_send_proof_screenshot'
+          nextNodeId: 'node_send_proof_screenshot',
+          targetApp: 'browser',
+          targetView: 'school_official'
         }
       ]
     },

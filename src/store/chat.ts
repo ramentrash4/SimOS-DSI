@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { MissionScript, MessageAttachment, DebriefTheoryCard, PlayerDecision } from '@/types/mission';
+import type { MissionScript, MessageAttachment, DebriefTheoryCard, PlayerDecision, ChoiceOption } from '@/types/mission';
 import { useSimOSStore } from '@/store/simos';
 import { sfx } from '@/utils/audio';
 
@@ -19,7 +19,7 @@ interface ChatState {
   isNpcTyping: boolean;
   script: MissionScript | null;
   currentNodeId: string | null;
-  choices: { text: string; points: number; nextNodeId: string | null }[] | null;
+  choices: ChoiceOption[] | null;
   status: 'playing' | 'gameover' | 'partial' | 'success';
   stars: number;
   reason: string | null;
@@ -290,6 +290,28 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
     const riskLevel: 'Kritis' | 'Sedang' | 'Aman' = option.points === 0 ? 'Kritis' : option.points < 3 ? 'Sedang' : 'Aman';
 
+    // Determine target app and view for synchronization
+    let targetApp = option.targetApp;
+    let targetView = option.targetView;
+    const optTextLower = option.text.toLowerCase();
+    const curIdLower = (currentNodeId || '').toLowerCase();
+
+    if (!targetApp) {
+      if (optTextLower.includes('safari') || optTextLower.includes('browser') || curIdLower.includes('browser')) {
+        targetApp = 'browser';
+        targetView = optTextLower.includes('gambar') || optTextLower.includes('pinterest') || optTextLower.includes('lisensi') ? 'image_search' : 'school_official';
+      } else if (optTextLower.includes('instapic') || optTextLower.includes('serang balik') || optTextLower.includes('maya') || curIdLower.includes('instapic') || curIdLower.includes('attack_back')) {
+        targetApp = 'instapic';
+        targetView = optTextLower.includes('serang balik') || optTextLower.includes('kurang ajar') ? 'flame_war' : 'siska_post';
+      } else if (optTextLower.includes('sms') || optTextLower.includes('otp') || optTextLower.includes('rekening') || curIdLower.includes('sms')) {
+        targetApp = 'messages';
+        targetView = 'bank_alert';
+      } else {
+        targetApp = 'chat';
+        targetView = 'chat_room';
+      }
+    }
+
     const decision: PlayerDecision = {
       id: Math.random().toString(36).substring(7),
       stepIndex: decisionHistory.length + 1,
@@ -298,6 +320,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
       chosenText: option.text,
       points: option.points,
       nodeId: currentNodeId || '',
+      targetApp,
+      targetView,
       alternatives: choices.map((c) => ({ text: c.text, points: c.points })),
       timestamp: new Date(),
       causalityAnalysis: {
