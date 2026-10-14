@@ -22,7 +22,7 @@ export default function GalleryApp() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100%-12px)] bg-black relative animate-in slide-in-from-bottom duration-300">
+    <div className="flex flex-col h-full bg-black relative animate-in slide-in-from-bottom duration-300">
       {/* Header */}
       <div className="bg-black/90 text-white flex items-center px-2 py-3 z-10 h-16 absolute top-0 inset-x-0">
         <button onClick={() => { openApp('chat'); advanceNode('success_end'); }} className="flex items-center text-white mr-2">

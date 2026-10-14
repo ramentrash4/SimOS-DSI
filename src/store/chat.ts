@@ -106,7 +106,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const node = script.nodes[nodeId];
     if (!node) return;
 
-    set({ currentNodeId: nodeId, isProcessingStep: true });
+    if (node.type !== 'choice') {
+      set({ currentNodeId: nodeId, isProcessingStep: true, choices: null });
+    } else {
+      set({ currentNodeId: nodeId, isProcessingStep: true });
+    }
 
     if (node.type === 'message') {
       const calculatedDelay = Math.min(4200, Math.max(2200, (node.text.length * 50) + (node.delay ? Math.min(node.delay, 1000) : 0)));
@@ -210,14 +214,16 @@ export const useChatStore = create<ChatState>((set, get) => ({
         }, 2200);
       }
     } else if (node.type === 'choice') {
+      set({ choices: null, isProcessingStep: true });
       setTimeout(() => {
         if (get().activeSessionId === currentSessionId) {
           set({ choices: node.options, isProcessingStep: false });
         }
-      }, 800);
+      }, 700);
     } else if (node.type === 'gameover') {
       sfx.playGlitch();
       set({
+        choices: null,
         status: 'gameover',
         reason: node.reason,
         stars: 1, // Minimum 1 star for participating
@@ -227,6 +233,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       });
     } else if (node.type === 'partial') {
       set({
+        choices: null,
         status: 'partial',
         reason: node.message || 'Misi Selesai dengan Catatan Evaluasi',
         stars: 2,
@@ -237,6 +244,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     } else if (node.type === 'success') {
       sfx.playSuccess();
       set({
+        choices: null,
         status: 'success',
         reason: node.message || 'Sempurna! Kamu berhasil menyelesaikan simulasi!',
         stars: 3,
@@ -256,6 +264,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
     // Immediately clear choices to prevent spam clicking
     set({ choices: null, isProcessingStep: true });
+    if (useSimOSStore.getState().hasProofScreenshot) {
+      useSimOSStore.getState().setHasProofScreenshot(false);
+    }
 
     sfx.playSend();
 

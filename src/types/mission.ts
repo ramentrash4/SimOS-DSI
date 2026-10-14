@@ -60,6 +60,7 @@ export type ChoiceNode = {
     text: string;
     points: number; // 0 = fatal/fail, 1-3 points
     nextNodeId: string | null;
+    isForwardAction?: boolean;
   }[];
 };
 

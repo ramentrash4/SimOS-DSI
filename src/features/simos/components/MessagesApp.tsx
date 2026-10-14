@@ -91,7 +91,7 @@ export default function MessagesApp() {
   const activeThread = threads.find(t => t.id === activeThreadId);
 
   return (
-    <div className="flex flex-col h-[calc(100%-12px)] bg-neutral-100 text-neutral-900 select-none animate-in slide-in-from-right duration-200">
+    <div className="flex flex-col h-full bg-neutral-100 text-neutral-900 select-none animate-in slide-in-from-right duration-200">
       {/* View 1: Thread Conversation */}
       {activeThread ? (
         <div className="flex flex-col h-full bg-white">

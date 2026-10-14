@@ -37,7 +37,8 @@ export const mission1: MissionScript = {
         {
           text: 'Wah asik libur! Langsung forward pesan Dina ke semua grup ekskul.',
           points: 0,
-          nextNodeId: 'node_forward_fatal'
+          nextNodeId: 'node_forward_fatal',
+          isForwardAction: true
         },
         {
           text: 'Din, serius ini? Dapat info dari mana? Tautannya kok blogspot aneh ya?',
@@ -182,7 +183,8 @@ export const mission1: MissionScript = {
         {
           text: 'Yaudah deh kalau dari kakak kelas pasti valid, aku bantu forward ya.',
           points: 0,
-          nextNodeId: 'node_forward_fatal'
+          nextNodeId: 'node_forward_fatal',
+          isForwardAction: true
         },
         {
           text: 'Jangan mudah percaya Din! Ayo kita cek ke website resmi SMAN 1 sekarang juga lewat Browser.',

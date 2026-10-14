@@ -59,6 +59,7 @@ export default function ChatApp() {
   const [showSpamAnimation, setShowSpamAnimation] = useState(false);
   const [isFutsalForwarded, setIsFutsalForwarded] = useState(false);
   const [viewingStory, setViewingStory] = useState<{ name: string; avatarSeed: string; time: string; text: string; bg?: string } | null>(null);
+  const [pendingForwardIndex, setPendingForwardIndex] = useState<number | null>(null);
 
   // Reset local states when mission restarts or session changes
   useEffect(() => {
@@ -66,6 +67,7 @@ export default function ChatApp() {
     setShowForwardModal(false);
     setShowSpamAnimation(false);
     setViewingStory(null);
+    setPendingForwardIndex(null);
   }, [activeSessionId]);
 
   const missionId = script?.id || 'm1';
@@ -77,12 +79,12 @@ export default function ChatApp() {
     }
   }, [activeContactId, setUnreadMessages]);
 
-  // Expand choices automatically whenever new choices arrive
+  // Expand choices automatically whenever new choices arrive while playing
   useEffect(() => {
-    if (choices && choices.length > 0) {
+    if (status === 'playing' && choices && choices.length > 0) {
       setIsChoicesExpanded(true);
     }
-  }, [choices]);
+  }, [choices, status]);
 
   // Smooth autoscroll to bottom
   useEffect(() => {
@@ -303,15 +305,55 @@ interface ChatContact {
   };
 
   // Handlers for interactive minigames
-  const handleOpenForwardModal = () => {
+  const handleOpenForwardModal = (choiceIndex: number) => {
+    setPendingForwardIndex(choiceIndex);
     setShowForwardModal(true);
+  };
+
+  const handleCloseForwardModal = () => {
+    setShowForwardModal(false);
+    setPendingForwardIndex(null);
   };
 
   const handleCompleteForward = () => {
     setShowForwardModal(false);
     setIsFutsalForwarded(true);
     markContactAsRead('futsal');
-    setActiveContactId('futsal');
+    const idx = pendingForwardIndex;
+    setPendingForwardIndex(null);
+    if (idx !== null) {
+      chooseOption(idx);
+    }
+    useSimOSStore.getState().showBanner({
+      app: 'chat',
+      sender: 'WhatsApp System',
+      text: '⏩ Pesan berhasil diteruskan ke 3 grup (Grup Futsal, OSIS, Rohis)'
+    });
+    setTimeout(() => {
+      setActiveContactId('futsal');
+    }, 500);
+  };
+
+  const handleSendProof = () => {
+    if (!hasProofScreenshot) return;
+    useSimOSStore.getState().setHasProofScreenshot(false);
+    useChatStore.getState().recordDecision({
+      stepTitle: 'Verifikasi Portal Sekolah (Cek Fakta)',
+      prompt: 'Laporkan temuan cek faktamu kepada Dina',
+      chosenText: 'Melampirkan bukti screenshot bantahan resmi dari portal sman1-official.sch.id',
+      points: 3,
+      nodeId: 'node_send_proof_screenshot',
+      alternatives: [
+        { text: 'Melampirkan bukti screenshot bantahan resmi dari web sekolah', points: 3 }
+      ],
+      causalityAnalysis: {
+        riskLevel: 'Aman',
+        mechanism: 'Menerapkan jeda kritis (Critical Thinking Pause) dan verifikasi bukti sahih ke website resmi sekolah.',
+        consequence: 'Menyelesaikan krisis secara elegan, melindungi diri & orang lain tanpa jejak toksik.',
+        bestPracticeRecommendation: 'Selalu terapkan prinsip 5 Detik Jeda Kritis, verifikasi lateral, dan empati sebelum bertindak di ruang digital.'
+      }
+    });
+    advanceNode('node_send_proof_screenshot');
   };
 
   const handleTriggerMalwareLink = () => {
@@ -336,7 +378,7 @@ interface ChatContact {
     const totalUnread = chatContacts.reduce((acc, c) => acc + (c.unread || 0), 0);
 
     return (
-      <div className={`flex flex-col h-[calc(100%-12px)] select-none animate-in fade-in duration-200 relative ${
+      <div className={`flex flex-col h-full select-none animate-in fade-in duration-200 relative ${
         isDarkMode ? 'bg-[#111b21] text-white' : 'bg-white text-neutral-900'
       }`}>
         {/* WhatsApp Top Header */}
@@ -778,7 +820,7 @@ interface ChatContact {
         {/* Modals placed inside View 2 as well */}
         {showForwardModal && (
           <ForwardMessageModal 
-            onClose={() => setShowForwardModal(false)}
+            onClose={handleCloseForwardModal}
             onForwardComplete={handleCompleteForward}
           />
         )}
@@ -978,7 +1020,7 @@ interface ChatContact {
       </div>
 
       {/* Collapsible Choice Drawer */}
-      {choices && choices.length > 0 && isChoicesExpanded && (
+      {status === 'playing' && !isNpcTyping && choices && choices.length > 0 && isChoicesExpanded && (
         <div className={`absolute bottom-16 inset-x-2 backdrop-blur-md shadow-2xl rounded-2xl p-3 z-30 animate-in slide-in-from-bottom-4 duration-300 border ${
           isDarkMode 
             ? 'bg-[#111b21]/95 border-neutral-700 text-white' 
@@ -1003,14 +1045,14 @@ interface ChatContact {
 
           <div className="space-y-2">
             {choices.map((choice, idx) => {
-              const isForwardChoice = choice.text.toLowerCase().includes('forward') || choice.text.toLowerCase().includes('sebar');
+              const isForwardChoice = Boolean((choice as any).isForwardAction || choice.nextNodeId === 'node_forward_fatal');
 
               return (
                 <button
                   key={idx}
                   onClick={() => {
                     if (isForwardChoice) {
-                      handleOpenForwardModal();
+                      handleOpenForwardModal(idx);
                     } else {
                       chooseOption(idx);
                     }
@@ -1034,12 +1076,12 @@ interface ChatContact {
         {/* Main WhatsApp Input Capsule */}
         <div 
           onClick={() => {
-            if (choices && choices.length > 0) {
+            if (status === 'playing' && !isNpcTyping && choices && choices.length > 0) {
               setIsChoicesExpanded(!isChoicesExpanded);
             }
           }}
           className={`flex-1 rounded-full px-3.5 py-2 flex items-center space-x-2 shadow-sm border transition-all ${
-            choices && choices.length > 0 ? 'cursor-pointer hover:border-emerald-500/50' : ''
+            status === 'playing' && !isNpcTyping && choices && choices.length > 0 ? 'cursor-pointer hover:border-emerald-500/50' : ''
           } ${
             isDarkMode 
               ? 'bg-[#202c33] border-[#2a3942] text-neutral-200' 
@@ -1058,7 +1100,7 @@ interface ChatContact {
                 <Camera size={14} className="mr-1.5 shrink-0 animate-pulse text-emerald-500" />
                 1 Screenshot Bukti Klarifikasi Siap Dikirim
               </span>
-            ) : choices && choices.length > 0 ? (
+            ) : status === 'playing' && !isNpcTyping && choices && choices.length > 0 ? (
               <span className="text-[12px] text-neutral-500 dark:text-neutral-400 truncate flex items-center">
                 <span>Ketik pesan...</span>
                 <span className="ml-1.5 text-[10.5px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full">
@@ -1087,7 +1129,7 @@ interface ChatContact {
             onClick={(e) => {
               if (hasProofScreenshot) {
                 e.stopPropagation();
-                advanceNode('node_choice_browser_result');
+                handleSendProof();
               }
             }}
             className={`shrink-0 ${hasProofScreenshot ? 'text-emerald-500 animate-pulse' : 'text-neutral-400'}`}
@@ -1099,13 +1141,13 @@ interface ChatContact {
         {/* Circular Send / Mic button */}
         {hasProofScreenshot ? (
           <button 
-            onClick={() => advanceNode('node_choice_browser_result')}
+            onClick={handleSendProof}
             className="w-10 h-10 rounded-full flex items-center justify-center text-white bg-[#00a884] hover:bg-[#008f6f] shadow-md flex-shrink-0 active:scale-95 transition-transform animate-bounce"
             title="Kirim Bukti Screenshot Cek Fakta"
           >
             <Send size={16} className="ml-0.5" />
           </button>
-        ) : choices && choices.length > 0 ? (
+        ) : status === 'playing' && !isNpcTyping && choices && choices.length > 0 ? (
           <button 
             onClick={() => setIsChoicesExpanded(!isChoicesExpanded)}
             className="w-10 h-10 rounded-full flex items-center justify-center text-white bg-[#00a884] hover:bg-[#008f6f] shadow-md flex-shrink-0 active:scale-95 transition-transform"
@@ -1123,7 +1165,7 @@ interface ChatContact {
       {/* Minigame 1: Forward Message Sheet */}
       {showForwardModal && (
         <ForwardMessageModal 
-          onClose={() => setShowForwardModal(false)}
+          onClose={handleCloseForwardModal}
           onForwardComplete={handleCompleteForward}
         />
       )}

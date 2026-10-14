@@ -42,15 +42,18 @@ export default function ForwardMessageModal({ onClose, onForwardComplete }: Forw
   };
 
   return (
-    <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex flex-col justify-end animate-in fade-in duration-200">
-      <div className={`border-t rounded-t-3xl p-4 shadow-2xl animate-in slide-in-from-bottom duration-300 max-h-[82%] pb-12 flex flex-col ${
+    <div className="absolute inset-0 z-50 bg-black/35 backdrop-blur-[2px] flex flex-col justify-end animate-in fade-in duration-200">
+      <div className={`border-t rounded-t-2xl p-4 shadow-2xl animate-in slide-in-from-bottom duration-300 max-h-[88%] pb-4 flex flex-col ${
         isDarkMode 
           ? 'bg-[#111b21] border-[#202c33] text-white' 
-          : 'bg-white border-neutral-200 text-neutral-900'
+          : 'bg-white border-neutral-200 text-neutral-900 shadow-xl'
       }`}>
         
+        {/* iOS Handle */}
+        <div className="w-10 h-1 bg-neutral-300 dark:bg-neutral-600 rounded-full mx-auto mb-2.5"></div>
+
         {/* Header */}
-        <div className={`flex items-center justify-between pb-3 border-b ${
+        <div className={`flex items-center justify-between pb-2.5 border-b ${
           isDarkMode ? 'border-[#202c33]' : 'border-neutral-200'
         }`}>
           <div>
@@ -72,21 +75,21 @@ export default function ForwardMessageModal({ onClose, onForwardComplete }: Forw
         </div>
 
         {/* Message Preview Box */}
-        <div className={`my-3 p-2.5 rounded-xl border text-[11px] space-y-1 ${
+        <div className={`my-2.5 p-2 rounded-xl border text-[11px] space-y-0.5 ${
           isDarkMode 
             ? 'bg-[#202c33]/70 border-neutral-700/60 text-neutral-300' 
-            : 'bg-neutral-100 border-neutral-200 text-neutral-700'
+            : 'bg-emerald-50/70 border-emerald-200/80 text-neutral-700'
         }`}>
           <span className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 flex items-center space-x-1">
             <span>Pesan yang akan diteruskan:</span>
           </span>
-          <p className="line-clamp-2 italic text-neutral-800 dark:text-neutral-200">
+          <p className="line-clamp-2 italic text-neutral-800 dark:text-neutral-200 text-[11.5px]">
             "PENGUMUMAN PENTING! Besok kita LIBUR TOTAL karena sidak Dinas... http://info-diknas-sekolah.blogspot.xyz/libur-mendadak"
           </p>
         </div>
 
         {/* Groups Checklist */}
-        <div className="flex-1 overflow-y-auto space-y-2 py-1">
+        <div className="flex-1 overflow-y-auto space-y-1.5 py-1 max-h-[220px]">
           {availableGroups.map((g) => {
             const isChecked = selectedGroups.includes(g.id);
 
@@ -94,7 +97,7 @@ export default function ForwardMessageModal({ onClose, onForwardComplete }: Forw
               <div 
                 key={g.id}
                 onClick={() => toggleGroup(g.id)}
-                className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
+                className={`p-2.5 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
                   isChecked 
                     ? isDarkMode 
                       ? 'bg-[#005c4b]/30 border-emerald-500/60 text-white' 
@@ -104,8 +107,8 @@ export default function ForwardMessageModal({ onClose, onForwardComplete }: Forw
                       : 'bg-neutral-50 border-neutral-200 text-neutral-800 hover:bg-neutral-100'
                 }`}
               >
-                <div className="flex items-center space-x-3">
-                  <span className="text-xl">{g.icon}</span>
+                <div className="flex items-center space-x-2.5">
+                  <span className="text-lg">{g.icon}</span>
                   <div>
                     <p className="text-xs font-bold leading-tight">{g.name}</p>
                     <p className={`text-[10px] ${isDarkMode ? 'text-neutral-400' : 'text-neutral-500'}`}>{g.members} anggota</p>
@@ -127,11 +130,11 @@ export default function ForwardMessageModal({ onClose, onForwardComplete }: Forw
         </div>
 
         {/* Footer Action */}
-        <div className={`pt-3 border-t flex items-center justify-between ${
+        <div className={`pt-2.5 mt-1 border-t flex items-center justify-between ${
           isDarkMode ? 'border-[#202c33]' : 'border-neutral-200'
         }`}>
           <span className={`text-xs font-mono ${isDarkMode ? 'text-neutral-400' : 'text-neutral-600'}`}>
-            Terpilih: <strong className={selectedGroups.length >= 3 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-500'}>
+            Terpilih: <strong className={selectedGroups.length >= 3 ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-amber-500'}>
               {selectedGroups.length} / 3 grup
             </strong>
           </span>
@@ -139,7 +142,7 @@ export default function ForwardMessageModal({ onClose, onForwardComplete }: Forw
           <Button 
             onClick={handleForward}
             disabled={selectedGroups.length < 3 || isSubmitting}
-            className={`text-xs font-bold px-4 h-9 shadow-md transition-all ${
+            className={`text-xs font-bold px-4 h-8 shadow-sm transition-all ${
               selectedGroups.length >= 3 
                 ? 'bg-[#00a884] hover:bg-[#008f6f] text-white shadow-emerald-500/20' 
                 : isDarkMode 

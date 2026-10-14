@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSimOSStore } from '@/store/simos';
 import { useChatStore } from '@/store/chat';
 import { 
@@ -22,7 +22,7 @@ import { Button } from '@/components/ui/button';
 
 export default function InstaPicApp() {
   const { openApp, isDarkMode } = useSimOSStore();
-  const { advanceNode, script, status, currentNodeId } = useChatStore();
+  const { advanceNode, script, status, currentNodeId, activeSessionId } = useChatStore();
   
   const missionId = script?.id || 'm2';
   
@@ -32,6 +32,15 @@ export default function InstaPicApp() {
   const [isCommentReported, setIsCommentReported] = useState(false);
   const [liked, setLiked] = useState(false);
   const [activeStory, setActiveStory] = useState<{ name: string; avatar: string; caption: string } | null>(null);
+
+  // Reset local states when mission restarts or session changes
+  useEffect(() => {
+    setShowOptionsModal(false);
+    setShowReportConfirm(false);
+    setIsCommentReported(false);
+    setLiked(false);
+    setActiveStory(null);
+  }, [activeSessionId]);
 
   // Level 3 Handlers
   const handleOpenCommentOptions = () => {
@@ -103,7 +112,7 @@ export default function InstaPicApp() {
   ];
 
   return (
-    <div className={`flex flex-col h-[calc(100%-12px)] relative animate-in zoom-in-95 duration-300 select-none ${
+    <div className={`flex flex-col h-full relative animate-in zoom-in-95 duration-300 select-none ${
       isDarkMode ? 'bg-black text-white' : 'bg-white text-neutral-900'
     }`}>
       {/* Instagram iOS Top Navigation Bar */}

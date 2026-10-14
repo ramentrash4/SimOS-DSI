@@ -25,7 +25,7 @@ type BrowserView = 'search_home' | 'school_official' | 'fake_blog' | 'forum_pela
 
 export default function BrowserApp() {
   const { openApp, showBanner, isDarkMode, hasProofScreenshot, setHasProofScreenshot } = useSimOSStore();
-  const { advanceNode, script } = useChatStore();
+  const { advanceNode, script, activeSessionId } = useChatStore();
   
   const isMission2 = script?.id === 'm2';
 
@@ -42,11 +42,17 @@ export default function BrowserApp() {
   const [highlightFeedback, setHighlightFeedback] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isMission2) {
-      setCurrentView('image_search');
-      setCurrentUrl('https://pinterest.com/search/fox-mascot');
-    }
-  }, [isMission2]);
+    const isM2 = script?.id === 'm2';
+    setSearchQuery('');
+    setCurrentView(isM2 ? 'image_search' : 'search_home');
+    setCurrentUrl(isM2 ? 'https://pinterest.com/search/fox-mascot' : 'https://search.simos.net');
+    setHasFoundProof(false);
+    setIsScreenshotTaken(false);
+    setIsFlashing(false);
+    setShowTabSwitcher(false);
+    setHighlightedParagraph(null);
+    setHighlightFeedback(null);
+  }, [activeSessionId, script?.id]);
 
   const searchResultsL1 = [
     {
