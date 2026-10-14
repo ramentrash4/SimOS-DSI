@@ -62,6 +62,41 @@ export default function MissionReviewDashboard({ onTogglePhoneView }: MissionRev
     }
   }, [status, debriefCard, user?.id, script?.id, stars, saveProgress.mutate]);
 
+  const effectiveDecisions: PlayerDecision[] = decisionHistory.length > 0 
+    ? decisionHistory 
+    : [
+        {
+          id: 'def-1',
+          stepIndex: 1,
+          stepTitle: 'Penyelesaian Skenario',
+          prompt: 'Evaluasi Respons Utama Pemain',
+          chosenText: debriefCard?.summary || 'Tindakan simulasi',
+          points: debriefCard?.stars || 1,
+          nodeId: 'end',
+          alternatives: [],
+          timestamp: new Date(),
+          causalityAnalysis: {
+            riskLevel: debriefCard?.status?.includes('BERHASIL') ? 'Aman' : debriefCard?.status === 'BERHASIL PARSIAL' ? 'Sedang' : 'Kritis',
+            mechanism: debriefCard?.status?.includes('BERHASIL') 
+              ? 'Tindakan diverifikasi dengan sumber resmi atau perlindungan privasi yang tepat.' 
+              : 'Terdapat celah keamanan atau keputusan impulsif dalam alur simulasi.',
+            consequence: debriefCard?.status?.includes('BERHASIL') 
+              ? 'Berhasil mencegah eskalasi risiko siber dan menjaga reputasi digital.' 
+              : 'Memicu kerentanan data atau dampak etika digital.',
+            bestPracticeRecommendation: 'Terapkan Jeda Kritis 5 Detik dan verifikasi berlapis sebelum berinteraksi di ruang siber.'
+          }
+        }
+      ];
+
+  const currentDecision = effectiveDecisions[selectedDecisionIndex] || effectiveDecisions[0];
+
+  // Synchronize phone view with currently analyzed decision
+  useEffect(() => {
+    if (currentDecision?.nodeId) {
+      useChatStore.getState().setHighlightedDecisionNodeId(currentDecision.nodeId);
+    }
+  }, [currentDecision?.nodeId]);
+
   if (!debriefCard) return null;
 
   const isSuccess = debriefCard.status === 'BERHASIL' || debriefCard.status === 'BERHASIL SEMPURNA';
@@ -73,37 +108,8 @@ export default function MissionReviewDashboard({ onTogglePhoneView }: MissionRev
     ? 'text-amber-400 border-amber-500/40 bg-amber-500/10' 
     : 'text-rose-400 border-rose-500/40 bg-rose-500/10';
 
-  // Fallback decision history if user took a shortcut or direct path
-  const effectiveDecisions: PlayerDecision[] = decisionHistory.length > 0 
-    ? decisionHistory 
-    : [
-        {
-          id: 'def-1',
-          stepIndex: 1,
-          stepTitle: 'Penyelesaian Skenario',
-          prompt: 'Evaluasi Respons Utama Pemain',
-          chosenText: debriefCard.summary,
-          points: debriefCard.stars,
-          nodeId: 'end',
-          alternatives: [],
-          timestamp: new Date(),
-          causalityAnalysis: {
-            riskLevel: isSuccess ? 'Aman' : isPartial ? 'Sedang' : 'Kritis',
-            mechanism: isSuccess 
-              ? 'Tindakan diverifikasi dengan sumber resmi atau perlindungan privasi yang tepat.' 
-              : 'Terdapat celah keamanan atau keputusan impulsif dalam alur simulasi.',
-            consequence: isSuccess 
-              ? 'Berhasil mencegah eskalasi risiko siber dan menjaga reputasi digital.' 
-              : 'Memicu kerentanan data atau dampak etika digital.',
-            bestPracticeRecommendation: 'Terapkan Jeda Kritis 5 Detik dan verifikasi berlapis sebelum berinteraksi di ruang siber.'
-          }
-        }
-      ];
-
-  const currentDecision = effectiveDecisions[selectedDecisionIndex] || effectiveDecisions[0];
-
   return (
-    <div className="w-full min-h-[100dvh] bg-gradient-to-b from-neutral-950 via-neutral-900 to-black text-white flex flex-col items-center justify-start pb-16 animate-in fade-in duration-500">
+    <div className="w-full min-h-full bg-gradient-to-b from-neutral-950 via-neutral-900 to-black text-white flex flex-col items-center justify-start pb-16 animate-in fade-in duration-500">
       
       {/* Top Banner & Hero Header */}
       <div className="w-full border-b border-neutral-800/80 bg-neutral-900/60 backdrop-blur-xl sticky top-0 z-30 px-4 py-3 sm:py-4">
@@ -265,7 +271,13 @@ export default function MissionReviewDashboard({ onTogglePhoneView }: MissionRev
                   return (
                     <div
                       key={decision.id || idx}
-                      onClick={() => setSelectedDecisionIndex(idx)}
+                      onClick={() => {
+                        setSelectedDecisionIndex(idx);
+                        useChatStore.getState().setHighlightedDecisionNodeId(decision.nodeId);
+                      }}
+                      onMouseEnter={() => {
+                        useChatStore.getState().setHighlightedDecisionNodeId(decision.nodeId);
+                      }}
                       className={`p-3.5 rounded-2xl border cursor-pointer transition-all ${
                         isSelected 
                           ? 'bg-blue-950/40 border-blue-500 shadow-md shadow-blue-500/10 ring-1 ring-blue-500/40' 

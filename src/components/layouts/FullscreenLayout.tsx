@@ -138,13 +138,26 @@ export default function FullscreenLayout() {
       </header>
 
       {/* Main Container */}
-      {isMissionCompleted && viewMode === 'dashboard' ? (
-        /* Fullscreen Web Pedagogical Review (Phone Bezel Disappears completely!) */
-        <main className="flex-1 w-full overflow-y-auto">
-          <MissionReviewDashboard onTogglePhoneView={() => setViewMode('phone')} />
+      {isMissionCompleted ? (
+        /* SPLIT SCREEN LAYOUT: 30% Phone on the left, 70% Analysis on the right */
+        <main className="flex-1 w-full h-[calc(100dvh-50px)] flex flex-col lg:flex-row items-stretch overflow-hidden">
+          {/* Left Column: 30% Virtual Phone Screen (Synced with Analysis) */}
+          <div className="w-full lg:w-[32%] xl:w-[30%] min-w-[340px] max-w-[430px] h-[48vh] lg:h-full flex items-center justify-center p-2 lg:p-4 bg-neutral-950/80 border-b lg:border-b-0 lg:border-r border-neutral-800/80 shrink-0 overflow-hidden relative">
+            <div 
+              style={{ transform: `scale(${scale * 0.90})`, transformOrigin: 'center center' }}
+              className="w-full h-full flex items-center justify-center transition-transform duration-200"
+            >
+              <Outlet />
+            </div>
+          </div>
+
+          {/* Right Column: 70% Comprehensive Causality & Debrief Analysis */}
+          <div className="flex-1 w-full h-[52vh] lg:h-full overflow-y-auto bg-neutral-900/60 p-2 sm:p-4 lg:p-6">
+            <MissionReviewDashboard />
+          </div>
         </main>
       ) : (
-        /* Phone View (Playing or inspecting phone screen) */
+        /* Phone View (Playing simulation) */
         <main className="flex-1 w-full h-[calc(100dvh-50px)] flex flex-col items-center justify-center p-0 sm:p-4 overflow-hidden sm:overflow-auto">
           <div 
             style={{ transform: `scale(${scale})`, transformOrigin: 'center center' }}
@@ -152,19 +165,6 @@ export default function FullscreenLayout() {
           >
             <Outlet />
           </div>
-
-          {/* Quick Floating Pill if viewing phone after mission completion */}
-          {isMissionCompleted && viewMode === 'phone' && (
-            <div className="fixed bottom-4 z-50">
-              <Button
-                onClick={() => setViewMode('dashboard')}
-                className="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-2xl shadow-blue-500/50 rounded-full px-5 py-2.5 flex items-center space-x-2 border border-blue-400/40 animate-bounce"
-              >
-                <Globe size={15} />
-                <span>Buka Tinjauan Pedagogik Lengkap (Web)</span>
-              </Button>
-            </div>
-          )}
         </main>
       )}
 

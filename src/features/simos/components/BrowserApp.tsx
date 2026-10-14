@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSimOSStore } from '@/store/simos';
 import { useChatStore } from '@/store/chat';
+import { sfx } from '@/utils/audio';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -139,6 +140,7 @@ export default function BrowserApp() {
 
   const handleCaptureScreenshot = () => {
     if (highlightedParagraph !== 2) return;
+    sfx.playCamera();
     setIsFlashing(true);
     setTimeout(() => setIsFlashing(false), 300);
     setHasProofScreenshot(true);
@@ -146,8 +148,13 @@ export default function BrowserApp() {
     showBanner({
       app: 'chat',
       sender: 'Kamera / Galeri',
-      text: '📸 Screenshot bukti klarifikasi resmi berhasil disimpan! Buka WhatsApp untuk mengirimkannya.'
+      text: '📸 Screenshot bukti resmi tersimpan! Mengalihkan ke obrolan grup kelas...'
     });
+    // Smooth automatic transition back to WhatsApp after 800ms
+    setTimeout(() => {
+      useSimOSStore.getState().setActiveContactId('active');
+      openApp('chat');
+    }, 800);
   };
 
   const handleReturnToChatWithProof = () => {

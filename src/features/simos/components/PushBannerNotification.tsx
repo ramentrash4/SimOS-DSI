@@ -19,10 +19,6 @@ export default function PushBannerNotification() {
   if (!activeBanner) return null;
 
   const handleClick = () => {
-    if (activeBanner.isHint) {
-      clearBanner();
-      return;
-    }
     if (activeBanner.app === 'chat') {
       useSimOSStore.getState().setActiveContactId('active');
     }

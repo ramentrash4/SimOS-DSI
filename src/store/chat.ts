@@ -5,6 +5,7 @@ import { sfx } from '@/utils/audio';
 
 export type Message = {
   id: string;
+  nodeId?: string;
   sender: 'npc' | 'player' | 'system';
   npcName?: string;
   avatarSeed?: string;
@@ -27,10 +28,12 @@ interface ChatState {
   activeSessionId: number;
   isProcessingStep: boolean;
   decisionHistory: PlayerDecision[];
+  highlightedDecisionNodeId: string | null;
   
   // Actions
   addMessage: (msg: Omit<Message, 'id' | 'timestamp'>) => void;
   setNpcTyping: (status: boolean) => void;
+  setHighlightedDecisionNodeId: (nodeId: string | null) => void;
   startMission: (script: MissionScript) => void;
   advanceNode: (nodeId: string, runSessionId?: number) => Promise<void>;
   chooseOption: (optionIndex: number) => void;
@@ -54,6 +57,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   activeSessionId: 0,
   isProcessingStep: false,
   decisionHistory: [],
+  highlightedDecisionNodeId: null,
 
   addMessage: (msg) => {
     const newMessage: Message = {
@@ -65,6 +69,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   setNpcTyping: (status) => set({ isNpcTyping: status }),
+  setHighlightedDecisionNodeId: (nodeId) => set({ highlightedDecisionNodeId: nodeId }),
 
   startMission: (script) => {
     const newSessionId = Date.now();
@@ -82,6 +87,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       debriefCard: null,
       isDebriefCardOpen: false,
       decisionHistory: [],
+      highlightedDecisionNodeId: null,
     });
     get().advanceNode(script.startNodeId, newSessionId);
   },
@@ -113,7 +119,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
 
     if (node.type === 'message') {
-      const calculatedDelay = Math.min(4200, Math.max(2200, (node.text.length * 50) + (node.delay ? Math.min(node.delay, 1000) : 0)));
+      // Dynamic tempo: short messages appear quickly (500ms), longer messages scale up to 1.8s
+      const calculatedDelay = Math.min(1800, Math.max(500, Math.round(node.text.length * 16) + (node.delay ? Math.min(node.delay, 300) : 0)));
 
       if (node.sender === 'npc') {
         setNpcTyping(true);
@@ -121,23 +128,18 @@ export const useChatStore = create<ChatState>((set, get) => ({
         if (get().activeSessionId !== currentSessionId) return;
         setNpcTyping(false);
       } else if (node.delay) {
-        await new Promise((r) => setTimeout(r, Math.max(1200, node.delay ?? 1200)));
+        await new Promise((r) => setTimeout(r, Math.min(450, node.delay ?? 300)));
         if (get().activeSessionId !== currentSessionId) return;
       }
 
       // Check system actions in message text
       const rawText = node.text;
 
-      // [SYSTEM_ACTION:openApp:app] -> Soft suggestion banner instead of forceful screen hijacking
+      // [SYSTEM_ACTION:openApp:app] -> Dynamic screen transition (e.g. viral IG post in Level 2, SMS alerts)
       const appMatch = rawText.match(/\[SYSTEM_ACTION:openApp:([^\]]+)\]/);
       if (appMatch) {
         const targetApp = appMatch[1] as any;
-        const appLabel = targetApp === 'instapic' ? 'InstaPic' : targetApp === 'browser' ? 'Safari' : targetApp === 'messages' ? 'Messages' : 'Aplikasi';
-        useSimOSStore.getState().showBanner({
-          app: targetApp,
-          sender: appLabel,
-          text: `Ketuk untuk membuka ${appLabel} sesuai arahan obrolan.`
-        });
+        useSimOSStore.getState().openApp(targetApp);
       }
 
       // [SYSTEM_ACTION:suggestApp:app:Sender:Text]
@@ -182,6 +184,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       const cleanText = rawText.replace(/\[SYSTEM_ACTION:[^\]]+\]/g, '').trim();
 
       addMessage({
+        nodeId,
         sender: node.sender,
         text: cleanText,
         npcName: node.npcName,
@@ -206,12 +209,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
       set({ isProcessingStep: false });
 
       if (node.nextNodeId) {
-        // Naturally paced reading delay (2.2s) before the next message begins
+        // Natural reading delay scaled to sentence length (650ms - 1.3s)
+        const readingDelay = Math.min(1300, Math.max(650, Math.round(cleanText.length * 9)));
         setTimeout(() => {
           if (get().activeSessionId === currentSessionId) {
             get().advanceNode(node.nextNodeId!, currentSessionId);
           }
-        }, 2200);
+        }, readingDelay);
       }
     } else if (node.type === 'choice') {
       set({ choices: null, isProcessingStep: true });
@@ -219,7 +223,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         if (get().activeSessionId === currentSessionId) {
           set({ choices: node.options, isProcessingStep: false });
         }
-      }, 700);
+      }, 400);
     } else if (node.type === 'gameover') {
       sfx.playGlitch();
       set({
@@ -271,6 +275,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     sfx.playSend();
 
     addMessage({
+      nodeId: currentNodeId || '',
       sender: 'player',
       text: option.text
     });
@@ -321,7 +326,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         if (get().activeSessionId === activeSessionId) {
           advanceNode(option.nextNodeId!, activeSessionId);
         }
-      }, 1000);
+      }, 350);
     } else {
       set({ isProcessingStep: false });
     }

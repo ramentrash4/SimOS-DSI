@@ -13,7 +13,6 @@ import ControlCenterModal from './ControlCenterModal';
 import NotificationCenterModal from './NotificationCenterModal';
 import AppSwitcher from './AppSwitcher';
 import PushBannerNotification from './PushBannerNotification';
-import DebriefModal from '@/features/story-engine/components/DebriefModal';
 
 export default function SimOSShell() {
   const { 
@@ -65,10 +64,6 @@ export default function SimOSShell() {
       <div 
         onClick={() => {
           if (activeBanner) {
-            if (activeBanner.isHint) {
-              useSimOSStore.getState().clearBanner();
-              return;
-            }
             if (activeBanner.app === 'chat') {
               useSimOSStore.getState().setActiveContactId('active');
             }
@@ -205,7 +200,6 @@ export default function SimOSShell() {
       <ControlCenterModal />
       <NotificationCenterModal />
       <AppSwitcher />
-      <DebriefModal />
     </div>
   );
 }

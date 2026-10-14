@@ -22,7 +22,8 @@ import {
   PhoneMissed,
   MoreVertical,
   X,
-  MessageSquare
+  MessageSquare,
+  Sparkles
 } from 'lucide-react';
 import ForwardMessageModal from './ForwardMessageModal';
 import SpamBroadcastAnimation from './SpamBroadcastAnimation';
@@ -48,7 +49,9 @@ export default function ChatApp() {
     advanceNode, 
     openDebriefCard,
     status,
-    activeSessionId
+    activeSessionId,
+    highlightedDecisionNodeId,
+    decisionHistory
   } = useChatStore();
 
   const endRef = useRef<HTMLDivElement>(null);
@@ -86,12 +89,26 @@ export default function ChatApp() {
     }
   }, [choices, status]);
 
-  // Smooth autoscroll to bottom
+  // Smooth autoscroll to bottom during play
   useEffect(() => {
-    if (activeContactId === 'active') {
+    if (activeContactId === 'active' && !highlightedDecisionNodeId) {
       endRef.current?.scrollIntoView({ behavior: 'smooth' });
+      const timer = setTimeout(() => {
+        endRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 80);
+      return () => clearTimeout(timer);
     }
-  }, [messages, isNpcTyping, choices, activeContactId, isChoicesExpanded]);
+  }, [messages, isNpcTyping, choices, activeContactId, isChoicesExpanded, hasProofScreenshot, highlightedDecisionNodeId]);
+
+  // Smooth scroll to highlighted decision message during review dashboard inspection
+  useEffect(() => {
+    if (highlightedDecisionNodeId && activeContactId === 'active') {
+      const el = document.querySelector('[data-highlighted-message="true"]');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }, [highlightedDecisionNodeId, activeContactId]);
 
   const channelTitle = script?.channelName || 'Grup Kelas X-MIPA 1';
   const isGroup = script?.isGroup ?? true;
@@ -895,11 +912,31 @@ interface ChatContact {
       }`}>
         {messages.map((m) => {
           const isMalwareLinkMsg = m.text.includes('blogspot.xyz');
+          const isHighlighted = Boolean(
+            highlightedDecisionNodeId && (
+              (m.nodeId && m.nodeId === highlightedDecisionNodeId) ||
+              decisionHistory.some(d => d.nodeId === highlightedDecisionNodeId && (m.text === d.chosenText || m.text.includes(d.chosenText)))
+            )
+          );
 
           return (
-            <div key={m.id} className={`flex ${m.sender === 'player' ? 'justify-end' : 'justify-start'}`}>
+            <div 
+              key={m.id} 
+              data-highlighted-message={isHighlighted ? "true" : undefined}
+              className={`flex flex-col ${m.sender === 'player' ? 'items-end' : 'items-start'} transition-all`}
+            >
+              {isHighlighted && (
+                <div className="flex items-center space-x-1 mb-1 px-2.5 py-0.5 rounded-full bg-yellow-400 text-black text-[10px] font-black shadow-lg animate-bounce z-30">
+                  <Sparkles size={12} className="text-black" />
+                  <span>Langkah Keputusan Sedang Dianalisis</span>
+                </div>
+              )}
               <div 
                 className={`max-w-[85%] rounded-2xl p-2.5 px-3.5 text-[13.5px] shadow-sm relative transition-all ${
+                  isHighlighted 
+                    ? 'ring-4 ring-yellow-400 shadow-[0_0_25px_rgba(250,204,21,0.7)] scale-[1.02] z-20' 
+                    : ''
+                } ${
                   m.sender === 'player' 
                     ? isDarkMode 
                       ? 'bg-[#005c4b] text-neutral-100 rounded-tr-none' 

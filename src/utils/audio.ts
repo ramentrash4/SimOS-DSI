@@ -171,6 +171,28 @@ class SoundEffects {
     osc.start(now);
     osc.stop(now + 0.15);
   }
+
+  // Camera screenshot shutter sound
+  playCamera() {
+    if (useSimOSStore.getState().isMuted) return;
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    [0, 0.08].forEach((delay) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1400, now + delay);
+      osc.frequency.exponentialRampToValueAtTime(350, now + delay + 0.035);
+      gain.gain.setValueAtTime(0.25, now + delay);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.035);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now + delay);
+      osc.stop(now + delay + 0.035);
+    });
+  }
 }
 
 export const sfx = new SoundEffects();
