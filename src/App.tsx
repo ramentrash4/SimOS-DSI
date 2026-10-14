@@ -19,9 +19,16 @@ import { mission5 } from '@/data/missions/mission5';
 const PlayMission = () => {
   const { missionId } = useParams();
   const startMission = useChatStore((state) => state.startMission);
+  const script = useChatStore((state) => state.script);
+  const status = useChatStore((state) => state.status);
   const lastMissionIdRef = useRef<string | null>(null);
 
   useEffect(() => {
+    // If the active mission in the store is already this mission, DO NOT restart it!
+    if (script?.id === missionId) {
+      lastMissionIdRef.current = missionId || null;
+      return;
+    }
     if (lastMissionIdRef.current === missionId) return;
     lastMissionIdRef.current = missionId || null;
 
@@ -36,7 +43,7 @@ const PlayMission = () => {
     } else if (missionId === 'm5') {
       startMission(mission5);
     }
-  }, [missionId, startMission]);
+  }, [missionId, startMission, script?.id, status]);
 
   return <SimOSShell />;
 };

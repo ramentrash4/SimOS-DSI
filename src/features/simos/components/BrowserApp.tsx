@@ -42,6 +42,14 @@ export default function BrowserApp() {
   const [highlightedParagraph, setHighlightedParagraph] = useState<number | null>(null);
   const [highlightFeedback, setHighlightFeedback] = useState<string | null>(null);
 
+  // Level 1: Domain & URL Security Inspector
+  const [showDomainInspector, setShowDomainInspector] = useState(false);
+
+  // Level 2: HAKI Watermark & Attribution Scanner
+  const [isWatermarkRevealed, setIsWatermarkRevealed] = useState(false);
+  const [showAttributionBuilder, setShowAttributionBuilder] = useState(false);
+  const [copiedAttribution, setCopiedAttribution] = useState(false);
+
   useEffect(() => {
     const isM2 = script?.id === 'm2';
     setSearchQuery('');
@@ -53,6 +61,10 @@ export default function BrowserApp() {
     setShowTabSwitcher(false);
     setHighlightedParagraph(null);
     setHighlightFeedback(null);
+    setShowDomainInspector(false);
+    setIsWatermarkRevealed(false);
+    setShowAttributionBuilder(false);
+    setCopiedAttribution(false);
   }, [activeSessionId, script?.id]);
 
   const searchResultsL1 = [
@@ -273,14 +285,24 @@ export default function BrowserApp() {
             </button>
           </div>
 
-          {/* Address Bar */}
-          <div className={`flex-1 mx-2 flex items-center justify-center rounded-xl px-2.5 py-1 border ${
+          {/* Address Bar - Clickable to open Domain Security Inspector */}
+          <div 
+            onClick={() => setShowDomainInspector(true)}
+            className={`flex-1 mx-2 flex items-center justify-between rounded-xl px-2.5 py-1 border cursor-pointer hover:border-blue-500/80 transition-all group ${
             isDarkMode 
               ? 'bg-[#2c2c2e] border-neutral-700/60 text-white' 
               : 'bg-gray-200/90 border-gray-300/50 text-gray-800'
-          }`}>
-            <Lock size={11} className={currentUrl.startsWith('https') ? 'text-green-500 mr-1' : 'text-red-500 mr-1'} />
-            <span className="text-[12px] font-mono truncate max-w-[170px]">{currentUrl}</span>
+          }`}
+            title="Ketuk untuk periksa keamanan domain & sertifikat SSL"
+          >
+            <div className="flex items-center min-w-0">
+              <Lock size={11} className={currentUrl.startsWith('https') ? 'text-green-500 mr-1.5 shrink-0' : 'text-red-500 mr-1.5 shrink-0'} />
+              <span className="text-[11.5px] font-mono truncate max-w-[150px]">{currentUrl}</span>
+            </div>
+            <span className="text-[9px] font-bold text-blue-500 opacity-80 group-hover:opacity-100 flex items-center shrink-0">
+              <ShieldCheck size={11} className="mr-0.5" />
+              <span>Cek</span>
+            </span>
           </div>
 
           <RotateCw size={17} className="text-blue-500 cursor-pointer mr-1" />
@@ -726,23 +748,47 @@ export default function BrowserApp() {
                   <div className="text-4xl mb-1">🦊</div>
                   <p className="text-xs font-bold text-amber-400">Digital Fox Mascot - Character Design</p>
                   <p className="text-[10px] text-neutral-400">Oleh: Bayu Pratama (@art_by_bayu)</p>
-                  <div className="absolute inset-x-0 bottom-1 flex justify-center">
-                    <span className="text-[9px] text-neutral-500 font-mono">WATERMARK: © ART BY BAYU • DO NOT REPOST</span>
+                  
+                  {/* Subtle or Highlighted Watermark */}
+                  <div className={`absolute inset-x-0 bottom-1 flex justify-center px-2 py-0.5 transition-all ${
+                    isWatermarkRevealed ? 'bg-rose-950/90 border-t border-rose-500 animate-pulse' : 'bg-black/40'
+                  }`}>
+                    <span className={`text-[9px] font-mono tracking-wider ${
+                      isWatermarkRevealed ? 'text-rose-400 font-bold underline' : 'text-neutral-500'
+                    }`}>
+                      WATERMARK: © ART BY BAYU • ALL RIGHTS RESERVED
+                    </span>
                   </div>
                 </div>
 
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   <p className="text-[11px] leading-snug">
                     Ilustrasi rubah api keren karya seniman lokal. Terdapat watermark hak cipta di bagian bawah.
                   </p>
-                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-2 text-[10px] text-amber-600 dark:text-amber-400">
-                    ⚠️ <strong>Pelanggaran Hak Cipta:</strong> Mengambil dan memotong watermark tanpa izin dapat berujung sengketa UU Hak Cipta dan mempermalukan sekolah di media sosial!
-                  </div>
+
+                  <button
+                    onClick={() => setIsWatermarkRevealed(!isWatermarkRevealed)}
+                    className="w-full py-1 px-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-yellow-400 text-[10px] font-bold flex items-center justify-center space-x-1 border border-neutral-700 transition-colors"
+                  >
+                    <span>{isWatermarkRevealed ? '👁️ Sembunyikan Deteksi Watermark' : '🔍 Scan Watermark & Metadata Hak Cipta'}</span>
+                  </button>
+
+                  {isWatermarkRevealed && (
+                    <div className="bg-rose-500/15 border border-rose-500/30 rounded-lg p-2 text-[10.5px] text-rose-400 space-y-1 animate-in fade-in">
+                      <p className="font-bold flex items-center">
+                        <ShieldAlert size={12} className="mr-1 text-rose-500" />
+                        Peringatan Pelanggaran Hak Cipta (Pasal 113 UU No. 28/2014):
+                      </p>
+                      <p className="text-[10px] text-neutral-300 leading-relaxed">
+                        Menghilangkan, memotong watermark, atau mengubah informasi manajemen hak cipta tanpa izin kreator dapat dikenai sanksi pidana dan denda hingga Rp 500.000.000!
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <Button
                   onClick={() => handleSelectAsset('pinterest')}
-                  className="w-full bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold py-2 active:scale-98"
+                  className="w-full bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold py-2 active:scale-98 shadow-md"
                 >
                   Gunakan Gambar Ini (Potong Watermark)
                 </Button>
@@ -773,10 +819,36 @@ export default function BrowserApp() {
                   </div>
                 </div>
 
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   <p className="text-[11px] leading-snug">
                     Vektor berkualitas tinggi yang dilepas oleh kreatornya dengan lisensi CC-BY untuk kepentingan publik dan edukasi.
                   </p>
+
+                  <button
+                    onClick={() => setShowAttributionBuilder(!showAttributionBuilder)}
+                    className="w-full py-1 px-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-emerald-400 text-[10px] font-bold flex items-center justify-center space-x-1 border border-neutral-700 transition-colors"
+                  >
+                    <span>{showAttributionBuilder ? '📋 Tutup Format Atribusi' : '📋 Format Atribusi Standar CC-BY (Edukasi)'}</span>
+                  </button>
+
+                  {showAttributionBuilder && (
+                    <div className="bg-emerald-500/15 border border-emerald-500/30 rounded-lg p-2 text-[10.5px] text-emerald-300 space-y-1 animate-in fade-in">
+                      <p className="font-bold">Standar Atribusi TASL (Title, Author, Source, License):</p>
+                      <p className="font-mono text-[9.5px] p-1.5 rounded bg-black/40 text-neutral-200">
+                        "Poster Pensi SMA 1 menggunakan karya 'Geometric Fox Vector' oleh Freepik Art, di bawah lisensi CC-BY 4.0."
+                      </p>
+                      <button
+                        onClick={() => {
+                          setCopiedAttribution(true);
+                          setTimeout(() => setCopiedAttribution(false), 2000);
+                        }}
+                        className="text-[9.5px] text-yellow-300 underline font-semibold mt-1"
+                      >
+                        {copiedAttribution ? '✓ Berhasil disalin ke memori!' : 'Salin Format Atribusi'}
+                      </button>
+                    </div>
+                  )}
+
                   <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-2 text-[10px] text-emerald-600 dark:text-emerald-400">
                     ✅ <strong>Etika Legal Terpenuhi:</strong> Legal digunakan untuk poster sekolah dengan menyertakan kredit nama pembuat.
                   </div>
@@ -784,7 +856,7 @@ export default function BrowserApp() {
 
                 <Button
                   onClick={() => handleSelectAsset('creative_commons')}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 active:scale-98"
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 active:scale-98 shadow-md"
                 >
                   Gunakan Vektor Creative Commons (Legal & Beretika)
                 </Button>
@@ -908,6 +980,103 @@ export default function BrowserApp() {
             >
               + Buka Tab Baru
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* DOMAIN & URL SECURITY INSPECTOR MODAL */}
+      {showDomainInspector && (
+        <div className="absolute inset-0 z-40 bg-black/80 backdrop-blur-md p-4 flex flex-col justify-center items-center animate-in fade-in duration-200">
+          <div className={`w-full max-w-[340px] rounded-3xl p-4 border shadow-2xl space-y-3.5 ${
+            isDarkMode ? 'bg-[#1c1c1e] border-neutral-700 text-white' : 'bg-white border-neutral-200 text-neutral-900'
+          }`}>
+            <div className="flex items-center justify-between border-b pb-2.5">
+              <div className="flex items-center space-x-2">
+                <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${
+                  currentUrl.includes('sch.id') ? 'bg-emerald-500/20 text-emerald-400' : currentUrl.includes('xyz') ? 'bg-rose-500/20 text-rose-400' : 'bg-blue-500/20 text-blue-400'
+                }`}>
+                  <ShieldCheck size={16} />
+                </div>
+                <div>
+                  <h3 className="text-xs font-bold leading-tight">Inspektur Keamanan Domain</h3>
+                  <p className="text-[10px] text-neutral-400">Verifikasi Fakta & Identitas Web</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowDomainInspector(false)}
+                className="w-6 h-6 rounded-full bg-neutral-500/20 flex items-center justify-center text-xs font-bold hover:bg-neutral-500/40"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* URL Breakdown Card */}
+            <div className="p-2.5 rounded-xl bg-neutral-500/10 border border-neutral-500/20 space-y-1.5 font-mono text-[10.5px]">
+              <div className="flex justify-between items-center">
+                <span className="text-neutral-400">Target URL:</span>
+                <span className="font-bold truncate max-w-[200px] text-blue-400">{currentUrl}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-neutral-400">Protokol:</span>
+                <span className={`font-bold ${currentUrl.startsWith('https') ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  {currentUrl.startsWith('https') ? 'HTTPS (Terenkripsi SSL)' : 'HTTP (Rentan Sadap)'}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-neutral-400">Klasifikasi TLD:</span>
+                <span className="font-bold">
+                  {currentUrl.includes('.sch.id') 
+                    ? '🏫 Domain Sekolah Resmi (.sch.id)' 
+                    : currentUrl.includes('.xyz') 
+                    ? '⚠️ Domain Anonim Berisiko (.xyz)' 
+                    : currentUrl.includes('pinterest')
+                    ? '🎨 Komunitas Gambar Publik'
+                    : '🌐 Domain Umum'}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-neutral-400">Skor Kredibilitas:</span>
+                <span className={`font-bold px-1.5 py-0.2 rounded text-[10px] ${
+                  currentUrl.includes('.sch.id') 
+                    ? 'bg-emerald-500/20 text-emerald-400' 
+                    : currentUrl.includes('.xyz') 
+                    ? 'bg-rose-500/20 text-rose-400' 
+                    : 'bg-amber-500/20 text-amber-400'
+                }`}>
+                  {currentUrl.includes('.sch.id') ? '98% (Sangat Kredibel)' : currentUrl.includes('.xyz') ? '5% (Sangat Berbahaya)' : '65% (Verifikasi Mandiri)'}
+                </span>
+              </div>
+            </div>
+
+            {/* Pedagogical Explanation Box */}
+            <div className={`p-2.5 rounded-xl border text-[11px] leading-relaxed ${
+              currentUrl.includes('.sch.id')
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                : currentUrl.includes('.xyz')
+                ? 'bg-rose-500/10 border-rose-500/30 text-rose-300'
+                : 'bg-blue-500/10 border-blue-500/30 text-blue-300'
+            }`}>
+              {currentUrl.includes('.sch.id') ? (
+                <p>
+                  ✅ <strong>Fakta Pedagogik:</strong> Domain <code className="bg-black/30 px-1 py-0.5 rounded">.sch.id</code> dikelola resmi oleh PANDI. Pendaftarannya wajib melampirkan SK Pendirian Sekolah Resmi dan KTP Kepala Sekolah. Informasi dari portal ini adalah rujukan hukum yang sah.
+                </p>
+              ) : currentUrl.includes('.xyz') ? (
+                <p>
+                  🚨 <strong>Waspada Phishing:</strong> Domain gratisan <code className="bg-black/30 px-1 py-0.5 rounded">.blogspot.xyz</code> dapat dibuat siapapun secara anonim dalam waktu kurang dari 3 menit. Lembaga resmi tidak pernah memakai domain gratisan untuk edaran dinas.
+                </p>
+              ) : (
+                <p>
+                  ℹ️ <strong>Tips Literasi:</strong> Selalu cek sumber primer sebelum mempercayai kabar yang beredar di grup obrolan atau media sosial.
+                </p>
+              )}
+            </div>
+
+            <Button 
+              onClick={() => setShowDomainInspector(false)}
+              className="w-full text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white py-2"
+            >
+              Paham, Lanjutkan Browsing
+            </Button>
           </div>
         </div>
       )}

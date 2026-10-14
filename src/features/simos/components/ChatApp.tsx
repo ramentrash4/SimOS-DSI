@@ -23,7 +23,9 @@ import {
   MoreVertical,
   X,
   MessageSquare,
-  Sparkles
+  Sparkles,
+  ShieldCheck,
+  AlertOctagon
 } from 'lucide-react';
 import ForwardMessageModal from './ForwardMessageModal';
 import SpamBroadcastAnimation from './SpamBroadcastAnimation';
@@ -55,6 +57,7 @@ export default function ChatApp() {
   } = useChatStore();
 
   const endRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<'chats' | 'updates' | 'communities' | 'calls'>('chats');
   const [chatFilter, setChatFilter] = useState<'all' | 'unread' | 'groups'>('all');
   const [isChoicesExpanded, setIsChoicesExpanded] = useState(true);
@@ -64,6 +67,9 @@ export default function ChatApp() {
   const [viewingStory, setViewingStory] = useState<{ name: string; avatarSeed: string; time: string; text: string; bg?: string } | null>(null);
   const [pendingForwardIndex, setPendingForwardIndex] = useState<number | null>(null);
 
+  // Level 4: Interactive Sandbox File & Permission Inspector
+  const [inspectingApkAttachment, setInspectingApkAttachment] = useState<{ fileName: string; fileSize: string } | null>(null);
+
   // Reset local states when mission restarts or session changes
   useEffect(() => {
     setIsFutsalForwarded(false);
@@ -71,6 +77,7 @@ export default function ChatApp() {
     setShowSpamAnimation(false);
     setViewingStory(null);
     setPendingForwardIndex(null);
+    setInspectingApkAttachment(null);
   }, [activeSessionId]);
 
   const missionId = script?.id || 'm1';
@@ -89,23 +96,31 @@ export default function ChatApp() {
     }
   }, [choices, status]);
 
-  // Smooth autoscroll to bottom during play
+  // Isolated autoscroll to bottom (ONLY within messages container to prevent screen displacement)
   useEffect(() => {
     if (activeContactId === 'active' && !highlightedDecisionNodeId) {
-      endRef.current?.scrollIntoView({ behavior: 'smooth' });
-      const timer = setTimeout(() => {
-        endRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 80);
+      const scrollBottom = () => {
+        if (messagesContainerRef.current) {
+          messagesContainerRef.current.scrollTo({
+            top: messagesContainerRef.current.scrollHeight,
+            behavior: 'smooth'
+          });
+        }
+      };
+      scrollBottom();
+      const timer = setTimeout(scrollBottom, 70);
       return () => clearTimeout(timer);
     }
   }, [messages, isNpcTyping, choices, activeContactId, isChoicesExpanded, hasProofScreenshot, highlightedDecisionNodeId]);
 
-  // Smooth scroll to highlighted decision message during review dashboard inspection
+  // Isolated scroll to highlighted decision message during review dashboard inspection
   useEffect(() => {
-    if (highlightedDecisionNodeId && activeContactId === 'active') {
-      const el = document.querySelector('[data-highlighted-message="true"]');
+    if (highlightedDecisionNodeId && activeContactId === 'active' && messagesContainerRef.current) {
+      const container = messagesContainerRef.current;
+      const el = container.querySelector('[data-highlighted-message="true"]') as HTMLElement | null;
       if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const topPos = el.offsetTop - (container.clientHeight / 2) + (el.clientHeight / 2);
+        container.scrollTo({ top: Math.max(0, topPos), behavior: 'smooth' });
       }
     }
   }, [highlightedDecisionNodeId, activeContactId]);
@@ -901,7 +916,9 @@ interface ChatContact {
       </div>
 
       {/* Messages Feed */}
-      <div className={`flex-1 overflow-y-auto p-3.5 space-y-2.5 relative transition-all duration-200 ${
+      <div 
+        ref={messagesContainerRef}
+        className={`flex-1 overflow-y-auto p-3.5 space-y-2.5 relative transition-all duration-200 ${
         isDarkMode 
           ? 'bg-[radial-gradient(#1f2c34_1px,transparent_1px)] [background-size:16px_16px]' 
           : 'bg-[radial-gradient(#d4ccc3_1px,transparent_1px)] [background-size:16px_16px]'
@@ -973,31 +990,34 @@ interface ChatContact {
                 )}
 
                 {/* Attachment Cards */}
-                {m.attachment && m.attachment.type === 'apk' && (
-                  <div 
-                    onClick={() => advanceNode('download_apk_fatal')}
-                    className={`mt-2 p-2.5 rounded-xl flex items-center justify-between cursor-pointer active:scale-98 transition-all group ${
-                      isDarkMode 
-                        ? 'bg-rose-950/60 border border-rose-800 text-rose-200 hover:bg-rose-900/60' 
-                        : 'bg-red-50 border border-red-200 text-red-700 hover:bg-red-100'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-2.5">
-                      <div className="w-9 h-9 rounded-lg bg-red-500 text-white flex items-center justify-center flex-shrink-0">
-                        <FileWarning size={20} />
+                {m.attachment && m.attachment.type === 'apk' && (() => {
+                  const apk = m.attachment;
+                  return (
+                    <div 
+                      onClick={() => setInspectingApkAttachment({ fileName: apk.fileName, fileSize: apk.fileSize })}
+                      className={`mt-2 p-2.5 rounded-xl flex items-center justify-between cursor-pointer active:scale-98 transition-all group ${
+                        isDarkMode 
+                          ? 'bg-rose-950/60 border border-rose-800 text-rose-200 hover:bg-rose-900/60' 
+                          : 'bg-red-50 border border-red-200 text-red-700 hover:bg-red-100'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-2.5">
+                        <div className="w-9 h-9 rounded-lg bg-red-500 text-white flex items-center justify-center flex-shrink-0">
+                          <FileWarning size={20} />
+                        </div>
+                        <div className="text-left">
+                          <p className={`text-xs font-bold truncate max-w-[150px] ${isDarkMode ? 'text-rose-200' : 'text-red-700'}`}>
+                            {apk.fileName}
+                          </p>
+                          <p className={`text-[10px] font-mono ${isDarkMode ? 'text-rose-400' : 'text-red-500'}`}>
+                            {apk.fileSize} • File Paket Android
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-left">
-                        <p className={`text-xs font-bold truncate max-w-[150px] ${isDarkMode ? 'text-rose-200' : 'text-red-700'}`}>
-                          {m.attachment.fileName}
-                        </p>
-                        <p className={`text-[10px] font-mono ${isDarkMode ? 'text-rose-400' : 'text-red-500'}`}>
-                          {m.attachment.fileSize} • File Paket Android
-                        </p>
-                      </div>
+                      <Download size={16} className="text-red-500 group-hover:scale-110 transition-transform" />
                     </div>
-                    <Download size={16} className="text-red-500 group-hover:scale-110 transition-transform" />
-                  </div>
-                )}
+                  );
+                })()}
 
                 {m.attachment && m.attachment.type === 'image' && (
                   <div className="mt-2 rounded-xl overflow-hidden border border-black/10 shadow-sm">
@@ -1212,6 +1232,108 @@ interface ChatContact {
         <SpamBroadcastAnimation 
           onFinished={handleFinishSpamAnimation}
         />
+      )}
+
+      {/* Level 4 Minigame: Sandbox APK & Permission Inspector Modal */}
+      {inspectingApkAttachment && (
+        <div className="absolute inset-0 z-50 bg-black/85 backdrop-blur-md p-4 flex flex-col justify-center items-center animate-in fade-in duration-200">
+          <div className={`w-full max-w-[340px] rounded-3xl p-4 border shadow-2xl space-y-3 ${
+            isDarkMode ? 'bg-[#1c1c1e] border-neutral-700 text-white' : 'bg-white border-neutral-200 text-neutral-900'
+          }`}>
+            <div className="flex items-center justify-between border-b pb-2">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-500 flex items-center justify-center">
+                  <FileWarning size={18} />
+                </div>
+                <div>
+                  <h3 className="text-xs font-bold leading-tight">SimOS Sandbox Inspector</h3>
+                  <p className="text-[10px] text-neutral-400">Analisis Keamanan Berkas Kurir</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setInspectingApkAttachment(null)}
+                className="w-6 h-6 rounded-full bg-neutral-500/20 flex items-center justify-center text-xs font-bold hover:bg-neutral-500/40"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* File Anatomy Card */}
+            <div className="p-2.5 rounded-xl bg-neutral-500/10 border border-neutral-500/20 space-y-1.5 font-mono text-[10.5px]">
+              <div className="flex justify-between items-center">
+                <span className="text-neutral-400">Nama Berkas:</span>
+                <span className="font-bold text-rose-400">{inspectingApkAttachment.fileName}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-neutral-400">Ekstensi Sebenarnya:</span>
+                <span className="font-bold text-rose-400 bg-rose-500/15 px-1 py-0.2 rounded">.APK (Executable Binary)</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-neutral-400">Klaim Pengirim:</span>
+                <span className="font-bold text-amber-400">Foto Resi Paket (.JPG palsu)</span>
+              </div>
+            </div>
+
+            {/* Permissions Threat Analysis */}
+            <div className="space-y-1">
+              <p className="text-[11px] font-bold text-rose-500 flex items-center">
+                <AlertOctagon size={13} className="mr-1" />
+                <span>Izin Akses Berbahaya yang Diminta:</span>
+              </p>
+              <div className="space-y-1 text-[10px] bg-rose-500/10 border border-rose-500/20 p-2 rounded-xl text-neutral-300">
+                <p>🚨 <strong>RECEIVE_SMS:</strong> Menyadap seluruh SMS masuk, termasuk kode OTP Mobile Banking.</p>
+                <p>🚨 <strong>READ_CONTACTS:</strong> Mencuri kontak telepon untuk menyebarkan malware ke kerabat.</p>
+                <p>🚨 <strong>INTERNET:</strong> Mengirim data pribadi ke server penipu secara diam-diam.</p>
+              </div>
+            </div>
+
+            {/* Pedagogical Rule */}
+            <div className="p-2 rounded-xl bg-blue-500/10 border border-blue-500/20 text-[10.5px] text-blue-300 leading-relaxed">
+              💡 <strong>Prinsip Jeda Kritis 5 Detik:</strong> Dokumen foto resi pengiriman asli SELALU berformat <code className="bg-black/30 px-1 rounded">.JPG</code>, <code className="bg-black/30 px-1 rounded">.PNG</code>, atau <code className="bg-black/30 px-1 rounded">.PDF</code>. Dokumen foto TIDAK PERNAH berupa file instalasi aplikasi Android (.APK)!
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-1.5 pt-1">
+              <button
+                onClick={() => {
+                  setInspectingApkAttachment(null);
+                  useChatStore.getState().recordDecision({
+                    stepTitle: 'Deteksi & Penolakan Malware APK',
+                    prompt: 'Analisis Izin File APK Kurir Misterius',
+                    chosenText: 'Tolak, Hapus Berkas APK Berbahaya, dan Blokir Nomor Kurir',
+                    points: 3,
+                    nodeId: 'node_block_courier_safe',
+                    alternatives: [
+                      { text: 'Pasang File APK Tanpa Memeriksa Ekstensi', points: 0 },
+                      { text: 'Tolak & Blokir Nomor Kurir Berbahaya', points: 3 }
+                    ],
+                    causalityAnalysis: {
+                      riskLevel: 'Aman',
+                      mechanism: 'Mengenali manipulasi ekstensi .APK dan menolak instalasi aplikasi pihak ketiga tak dikenal.',
+                      consequence: 'Saldo tabungan dan kode SMS OTP perbankan terlindungi sepenuhnya dari penyadapan.',
+                      bestPracticeRecommendation: 'Jangan pernah memasang file .APK dari pesan WhatsApp atau kontak tak dikenal.'
+                    }
+                  });
+                  advanceNode('node_block_courier_safe');
+                }}
+                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-2.5 rounded-xl shadow-md shadow-emerald-600/30 active:scale-98 flex items-center justify-center space-x-1.5 transition-all"
+              >
+                <ShieldCheck size={14} />
+                <span>Tolak, Karantina & Blokir Nomor (Aman)</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setInspectingApkAttachment(null);
+                  advanceNode('download_apk_fatal');
+                }}
+                className="w-full border border-rose-800/80 text-rose-400 hover:bg-rose-950/40 text-xs py-1.5 rounded-xl transition-colors font-medium"
+              >
+                <span>Bypass Sandbox & Pasang Tetap Lanjut (Risiko Tinggi)</span>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

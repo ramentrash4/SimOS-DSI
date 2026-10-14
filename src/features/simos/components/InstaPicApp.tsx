@@ -33,6 +33,10 @@ export default function InstaPicApp() {
   const [liked, setLiked] = useState(false);
   const [activeStory, setActiveStory] = useState<{ name: string; avatar: string; caption: string } | null>(null);
 
+  // States for Level 5 interactive footprint analysis
+  const [timelineYear, setTimelineYear] = useState<'2023' | '2026'>('2023');
+  const [showFootprintAnalyzer, setShowFootprintAnalyzer] = useState(false);
+
   // Reset local states when mission restarts or session changes
   useEffect(() => {
     setShowOptionsModal(false);
@@ -40,6 +44,8 @@ export default function InstaPicApp() {
     setIsCommentReported(false);
     setLiked(false);
     setActiveStory(null);
+    setTimelineYear('2023');
+    setShowFootprintAnalyzer(false);
   }, [activeSessionId]);
 
   // Level 3 Handlers
@@ -486,10 +492,25 @@ export default function InstaPicApp() {
                     Dengan tulus saya memohon maaf kepada Bapak/Ibu Guru dan seluruh warga sekolah atas perkataan buruk saya 3 tahun lalu. Masa lalu tidak bisa diubah, namun saya berkomitmen membuktikan kedewasaan dan integritas saya hari ini. Terima kasih atas bimbingannya.
                   </p>
 
-                  <div className="mt-3 space-y-2 border-t border-neutral-100 pt-2 text-xs">
-                    <p><span className="font-bold text-indigo-700">pak_guru_informatika:</span> Bapak bangga padamu, Budi. Berani mengakui kesalahan dan bertanggung jawab adalah tanda pemimpin sejati.</p>
-                    <p><span className="font-bold text-neutral-900">siska_aurora:</span> Ksatria banget kak Budi! Semangat terus, kami tetap dukung! 👏✨</p>
-                    <p><span className="font-bold text-neutral-900">ketua_mpk:</span> Kedewasaan sikap seperti ini yang kita butuhkan di OSIS.</p>
+                  {/* Public Sentiment Meter */}
+                  <div className="mt-3 p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 space-y-1.5">
+                    <div className="flex justify-between items-center text-[10.5px] font-bold">
+                      <span className="text-emerald-700 dark:text-emerald-300">Sentimen Komunitas Sekolah:</span>
+                      <span className="text-emerald-600 dark:text-emerald-400 font-mono">94% Respek & Memaafkan</span>
+                    </div>
+                    <div className="w-full h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden flex">
+                      <div className="h-full bg-emerald-500 rounded-l-full" style={{ width: '94%' }} />
+                      <div className="h-full bg-rose-400 rounded-r-full" style={{ width: '6%' }} />
+                    </div>
+                    <p className="text-[9.5px] text-neutral-500 dark:text-neutral-400">
+                      Keberanian bertanggung jawab secara jujur menyelamatkan integritas Budi di mata guru dan siswa.
+                    </p>
+                  </div>
+
+                  <div className="mt-3 space-y-2 border-t border-neutral-100 dark:border-neutral-800 pt-2 text-xs">
+                    <p><span className="font-bold text-indigo-700 dark:text-indigo-400">pak_guru_informatika:</span> Bapak bangga padamu, Budi. Berani mengakui kesalahan dan bertanggung jawab adalah tanda pemimpin sejati.</p>
+                    <p><span className="font-bold text-neutral-900 dark:text-neutral-100">siska_aurora:</span> Ksatria banget kak Budi! Semangat terus, kami tetap dukung! 👏✨</p>
+                    <p><span className="font-bold text-neutral-900 dark:text-neutral-100">ketua_mpk:</span> Kedewasaan sikap seperti ini yang kita butuhkan di OSIS.</p>
                   </div>
                 </div>
               </div>
@@ -502,24 +523,78 @@ export default function InstaPicApp() {
                       LS
                     </div>
                     <div>
-                      <span className="font-bold text-xs text-neutral-900">lambe_sman1_official</span>
+                      <span className="font-bold text-xs text-neutral-900 dark:text-white">lambe_sman1_official</span>
                       <p className="text-[10px] text-neutral-400">Akun Gosip Siswa • 1 jam yang lalu</p>
                     </div>
                   </div>
                   <MoreHorizontal size={18} className="text-neutral-500" />
                 </div>
 
-                {/* Exposed Old Screenshot Banner */}
-                <div className="w-full bg-neutral-900 p-4 border-y border-amber-500/50">
+                {/* Exposed Old Screenshot Banner with Interactive Footprint Inspector */}
+                <div className="w-full bg-neutral-900 p-3.5 border-y border-amber-500/50 space-y-2.5">
                   <div className="bg-white rounded-xl p-3 shadow-inner">
                     <div className="flex items-center justify-between border-b pb-2 mb-2">
-                      <span className="text-[10px] font-mono text-neutral-400">Screenshot: 3 Tahun Lalu (Kelas 7 SMP)</span>
-                      <span className="text-[9px] bg-red-100 text-red-600 font-bold px-1 rounded">JEJAK DIGITAL</span>
+                      <span className="text-[10px] font-mono text-neutral-500">
+                        {timelineYear === '2023' ? '🗓️ Arsip Status: September 2023 (Kelas 7 SMP)' : '📱 Viral Kembali: Oktober 2026 (Kelas 10 SMA)'}
+                      </span>
+                      <span className="text-[9px] bg-red-100 text-red-600 font-bold px-1.5 py-0.5 rounded">
+                        JEJAK DIGITAL
+                      </span>
                     </div>
                     <p className="text-xs font-mono text-neutral-800 leading-relaxed">
                       "Guru MTK rese banget ngasih PR seabrek, guru gak jelas dasar orang tua kolot!" 🤬
                     </p>
-                    <p className="text-[10px] text-neutral-500 mt-2 font-mono">Diposting oleh: @budi_santoso (Akun Lama)</p>
+                    <p className="text-[10px] text-neutral-500 mt-2 font-mono flex items-center justify-between">
+                      <span>Diposting oleh: @budi_santoso (Akun Lama)</span>
+                      <span className="text-[9px] text-rose-500 font-bold">Tangkapan Layar Pihak Ketiga</span>
+                    </p>
+                  </div>
+
+                  {/* Interactive Footprint Timeline Scrubber */}
+                  <div className="bg-neutral-800/90 rounded-xl p-2.5 border border-neutral-700 space-y-2">
+                    <div className="flex items-center justify-between text-[11px] font-bold text-neutral-300">
+                      <span>Mesin Waktu Jejak Digital:</span>
+                      <div className="flex bg-neutral-900 rounded-lg p-0.5 border border-neutral-700">
+                        <button
+                          onClick={() => setTimelineYear('2023')}
+                          className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-all ${
+                            timelineYear === '2023' ? 'bg-amber-500 text-black font-bold' : 'text-neutral-400 hover:text-white'
+                          }`}
+                        >
+                          2023 (SMP)
+                        </button>
+                        <button
+                          onClick={() => setTimelineYear('2026')}
+                          className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-all ${
+                            timelineYear === '2026' ? 'bg-amber-500 text-black font-bold' : 'text-neutral-400 hover:text-white'
+                          }`}
+                        >
+                          2026 (SMA)
+                        </button>
+                      </div>
+                    </div>
+
+                    <p className="text-[10.5px] text-neutral-300 leading-relaxed">
+                      {timelineYear === '2023' 
+                        ? 'ℹ️ Pada 2023, Budi menghapus status ini 2 jam setelah diunggah. Budi mengira jejaknya sudah musnah selamanya.'
+                        : '🚨 Pada 2026, tangkapan layar yang sempat disimpan oleh teman sekolah muncul kembali saat pencalonan Ketua OSIS.'}
+                    </p>
+
+                    <button
+                      onClick={() => setShowFootprintAnalyzer(!showFootprintAnalyzer)}
+                      className="w-full py-1 text-[10px] text-blue-400 hover:text-blue-300 underline font-semibold text-center block"
+                    >
+                      {showFootprintAnalyzer ? 'Tutup Analisis Forensik' : '🔍 Mengapa Jejak Digital Bersifat Permanen? (Baca Penjelasan)'}
+                    </button>
+
+                    {showFootprintAnalyzer && (
+                      <div className="p-2 rounded-lg bg-black/50 border border-neutral-700 text-[10px] text-neutral-300 space-y-1 animate-in fade-in">
+                        <p className="font-bold text-yellow-400">Prinsip Abadi Jejak Digital (DSI Concept):</p>
+                        <p>1. <strong>Screenshot Caching:</strong> Pengguna lain dapat menangkap bukti dalam hitungan detik sebelum tombol delete ditekan.</p>
+                        <p>2. <strong>Web Archive:</strong> Server perantara dan mesin pencari mengarsipkan metadata publik.</p>
+                        <p>3. <strong>Solusi Integritas:</strong> Menutup jejak dengan alibi "akun dihack" mudah dibantah lewat audit log IP.</p>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -532,8 +607,8 @@ export default function InstaPicApp() {
                     </div>
                     <Bookmark size={22} />
                   </div>
-                  <p className="font-bold text-xs text-neutral-900">1,210 suka • 342 komentar</p>
-                  <p className="text-xs text-neutral-800 mt-1 leading-relaxed">
+                  <p className="font-bold text-xs text-neutral-900 dark:text-neutral-100">1,210 suka • 342 komentar</p>
+                  <p className="text-xs text-neutral-800 dark:text-neutral-200 mt-1 leading-relaxed">
                     <span className="font-bold mr-1.5">lambe_sman1_official</span>
                     BOCOR! Calon Ketua OSIS nomor urut 1 ternyata punya rekam jejak digital menghina guru di masa lalu. Apakah layak memimpin siswa sekolah kita?! #PemilihanOSIS #JejakDigital
                   </p>
@@ -546,30 +621,39 @@ export default function InstaPicApp() {
       </div>
 
       {/* ============================================================== */}
-      {/* BOTTOM SHEET MODAL: COMMENT ACTIONS (FOR LEVEL 3)             */}
+      {/* BOTTOM SHEET MODAL: MULTI-CATEGORY REPORTING (LEVEL 3)        */}
       {/* ============================================================== */}
       {showOptionsModal && (
         <div className="absolute inset-0 bg-black/60 z-30 flex flex-col justify-end animate-in fade-in duration-200">
-          <div className="bg-white rounded-t-3xl p-4 animate-in slide-in-from-bottom-4 space-y-2 border-t border-neutral-200">
-            <div className="w-10 h-1 bg-neutral-300 rounded-full mx-auto mb-3" />
+          <div className="bg-white dark:bg-neutral-900 rounded-t-3xl p-4 animate-in slide-in-from-bottom-4 space-y-2 border-t border-neutral-200 dark:border-neutral-800">
+            <div className="w-10 h-1 bg-neutral-300 dark:bg-neutral-700 rounded-full mx-auto mb-2" />
             <p className="text-xs font-bold text-neutral-500 text-center uppercase tracking-wider mb-2">
-              Tindakan Komentar Maya:
+              Pusat Moderasi Konten & Tindakan:
             </p>
 
             <button 
               onClick={handleSelectReport}
-              className="w-full text-left p-3.5 text-[14px] font-bold text-red-600 hover:bg-red-50 rounded-xl flex items-center border border-red-100 transition-colors"
+              className="w-full text-left p-3 text-[13px] font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-xl flex items-center justify-between border border-red-200 dark:border-red-900/50 transition-colors"
             >
-              <Flag size={18} className="mr-2.5 text-red-600" />
-              Laporkan Komentar (Perundungan / Cyberbullying)
+              <div className="flex items-center">
+                <Flag size={18} className="mr-2.5 text-red-600 shrink-0" />
+                <div>
+                  <p className="leading-tight">Laporkan Pelecehan / Body Shaming</p>
+                  <p className="text-[10px] text-neutral-400 font-normal mt-0.5">Melanggar Panduan Komunitas & Pasal 27A UU ITE</p>
+                </div>
+              </div>
+              <span className="text-[10px] bg-red-100 dark:bg-red-900/40 text-red-600 px-2 py-0.5 rounded-full font-bold">Rekomendasi</span>
             </button>
 
             <button 
               onClick={handleAttackBack}
-              className="w-full text-left p-3.5 text-[13.5px] font-medium text-neutral-800 hover:bg-neutral-100 rounded-xl flex items-center border border-neutral-200 transition-colors"
+              className="w-full text-left p-3 text-[13px] font-medium text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 rounded-xl flex items-center border border-amber-200 dark:border-amber-900/50 transition-colors"
             >
-              <AlertTriangle size={18} className="mr-2.5 text-amber-500" />
-              Balas Menyerang Balik di Publik (Adu Mulut)
+              <AlertTriangle size={18} className="mr-2.5 text-amber-500 shrink-0" />
+              <div>
+                <p className="leading-tight">Balas Menyerang Balik Maya di Publik (Adu Mulut)</p>
+                <p className="text-[10px] text-neutral-400 font-normal mt-0.5">Memicu Flame War & merusak rekam jejak digital pribadi</p>
+              </div>
             </button>
 
             <button 
@@ -578,15 +662,18 @@ export default function InstaPicApp() {
                 openApp('chat');
                 advanceNode('node_bystander_fatal');
               }}
-              className="w-full text-left p-3.5 text-[13px] font-medium text-neutral-600 hover:bg-neutral-100 rounded-xl flex items-center border border-neutral-200 transition-colors"
+              className="w-full text-left p-3 text-[13px] font-medium text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl flex items-center border border-neutral-200 dark:border-neutral-800 transition-colors"
             >
-              <ShieldAlert size={18} className="mr-2.5 text-neutral-400" />
-              Abaikan Saja / Pura-pura Tidak Tahu (Bystander)
+              <ShieldAlert size={18} className="mr-2.5 text-neutral-400 shrink-0" />
+              <div>
+                <p className="leading-tight">Abaikan Saja / Pura-pura Tidak Tahu</p>
+                <p className="text-[10px] text-neutral-400 font-normal mt-0.5">Bystander Effect: Membiarkan korban terluka sendirian</p>
+              </div>
             </button>
 
             <button 
               onClick={() => setShowOptionsModal(false)}
-              className="w-full text-center p-3 text-xs font-semibold text-neutral-500 hover:text-neutral-800"
+              className="w-full text-center p-2.5 text-xs font-semibold text-neutral-500 hover:text-neutral-800 dark:hover:text-white"
             >
               Batal
             </button>
@@ -597,27 +684,32 @@ export default function InstaPicApp() {
       {/* CONFIRMATION REPORT DIALOG */}
       {showReportConfirm && (
         <div className="absolute inset-0 bg-black/60 z-40 flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white rounded-2xl w-full p-4.5 text-center space-y-3 shadow-2xl border border-neutral-100">
-            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-red-600 mx-auto">
+          <div className="bg-white dark:bg-neutral-900 rounded-2xl w-full p-4.5 text-center space-y-3 shadow-2xl border border-neutral-200 dark:border-neutral-800">
+            <div className="w-12 h-12 bg-red-100 dark:bg-red-950/50 rounded-full flex items-center justify-center text-red-600 mx-auto">
               <Flag size={24} />
             </div>
-            <h3 className="font-bold text-sm text-neutral-900">Laporkan Komentar Maya?</h3>
-            <p className="text-xs text-neutral-600 leading-relaxed">
-              Komentar ini akan dilaporkan atas pelanggaran <strong>Perundungan Siber (Cyberbullying) & Body Shaming</strong> dan disembunyikan dari linimasa.
-            </p>
-            <div className="space-y-2 pt-2">
+            <h3 className="font-bold text-sm text-neutral-900 dark:text-white">Laporkan Komentar Maya?</h3>
+            <div className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed space-y-1.5 text-left bg-neutral-50 dark:bg-neutral-800/60 p-3 rounded-xl border border-neutral-200 dark:border-neutral-700">
+              <p>
+                Komentar ini memenuhi unsur <strong>Pelecehan Verbal & Body Shaming</strong>.
+              </p>
+              <p className="text-[10.5px] text-neutral-400 font-mono">
+                Dasar Hukum: Pasal 27A UU No. 1/2024 (Revisi UU ITE) tentang larangan penyerangan kehormatan atau nama baik orang lain di ruang elektronik.
+              </p>
+            </div>
+            <div className="space-y-2 pt-1">
               <Button 
                 onClick={handleConfirmReport}
                 className="w-full bg-red-600 hover:bg-red-700 text-white font-bold text-xs py-2 shadow-md shadow-red-500/20"
               >
-                Konfirmasi Laporkan
+                Konfirmasi Laporkan & Bersihkan Komentar
               </Button>
               <Button 
                 onClick={() => setShowReportConfirm(false)}
                 variant="outline" 
                 className="w-full text-xs"
               >
-                Batal
+                Kembali
               </Button>
             </div>
           </div>
