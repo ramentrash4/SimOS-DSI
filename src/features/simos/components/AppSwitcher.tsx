@@ -1,4 +1,4 @@
-import { X, MessageCircle, Sparkles, Compass, MessageSquare, Image, Home } from 'lucide-react';
+import { X, MessageCircle, Sparkles, Compass, MessageSquare, Image, Home, FileText } from 'lucide-react';
 import { useSimOSStore, type AppName } from '@/store/simos';
 import { sfx } from '@/utils/audio';
 
@@ -55,6 +55,14 @@ export default function AppSwitcher() {
           color: 'bg-indigo-600',
           headerText: 'Foto & Poster',
           bgPreview: 'bg-neutral-900'
+        };
+      case 'notes':
+        return {
+          name: 'Catatan',
+          icon: <FileText size={14} className="text-neutral-950" />,
+          color: 'bg-amber-400',
+          headerText: 'Pusat Catatan DSI',
+          bgPreview: 'bg-amber-50'
         };
       default:
         return {

@@ -6,7 +6,8 @@ import {
   Image as ImageIcon, 
   ShieldCheck, 
   Calendar,
-  CloudSun
+  CloudSun,
+  FileText
 } from 'lucide-react';
 
 export default function HomeApp() {
@@ -90,6 +91,17 @@ export default function HomeApp() {
             <ImageIcon className="text-sky-500" size={28} />
           </div>
           <span className="text-white text-xs mt-1.5 font-medium drop-shadow-sm">Galeri</span>
+        </button>
+
+        {/* Catatan / Notes App */}
+        <button 
+          onClick={() => openApp('notes')} 
+          className="flex flex-col items-center group active:scale-95 transition-transform"
+        >
+          <div className="w-14 h-14 bg-gradient-to-b from-amber-400 to-amber-500 rounded-2xl flex items-center justify-center relative shadow-md group-hover:scale-105 transition-transform border border-white/20">
+            <FileText className="text-neutral-900" size={28} />
+          </div>
+          <span className="text-white text-xs mt-1.5 font-medium drop-shadow-sm">Catatan</span>
         </button>
 
         {/* Messages (SMS) App */}

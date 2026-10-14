@@ -9,6 +9,7 @@ import GalleryApp from './GalleryApp';
 import BrowserApp from './BrowserApp';
 import InstaPicApp from './InstaPicApp';
 import MessagesApp from './MessagesApp';
+import NotesApp from './NotesApp';
 import ControlCenterModal from './ControlCenterModal';
 import NotificationCenterModal from './NotificationCenterModal';
 import AppSwitcher from './AppSwitcher';
@@ -59,7 +60,7 @@ export default function SimOSShell() {
   }, [status, glitchLevel]);
 
   return (
-    <div className={`relative w-full h-full max-w-[430px] sm:w-[380px] sm:min-w-[380px] sm:max-w-[380px] sm:h-[812px] sm:min-h-[812px] sm:max-h-[812px] bg-black sm:rounded-[50px] sm:shadow-2xl sm:border-[10px] sm:border-neutral-900 sm:ring-4 sm:ring-neutral-800/80 overflow-hidden flex-shrink-0 transition-transform ${isShaking ? 'animate-shake' : ''}`}>
+    <div className={`relative w-[380px] min-w-[380px] max-w-[380px] h-[812px] min-h-[812px] max-h-[812px] bg-black rounded-[50px] shadow-2xl border-[10px] border-neutral-900 ring-4 ring-neutral-800/80 overflow-hidden flex-shrink-0 transition-transform ${isShaking ? 'animate-shake' : ''}`}>
       {/* Notch / Dynamic Island */}
       <div 
         onClick={() => {
@@ -149,7 +150,7 @@ export default function SimOSShell() {
             {currentApp === 'browser' && <BrowserApp />}
             {currentApp === 'instapic' && <InstaPicApp />}
             {currentApp === 'messages' && <MessagesApp />}
-            {currentApp === 'notes' && <div className="p-6">Notes (WIP)</div>}
+            {currentApp === 'notes' && <NotesApp />}
           </>
         )}
       </div>

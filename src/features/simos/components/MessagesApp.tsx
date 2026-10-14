@@ -21,8 +21,13 @@ interface SmsThread {
 
 export default function MessagesApp() {
   const { openApp } = useSimOSStore();
-  const { highlightedDecisionNodeId } = useChatStore();
+  const { highlightedDecisionNodeId, activeSessionId } = useChatStore();
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
+
+  // Reset thread selection when session starts or restarts
+  useEffect(() => {
+    setActiveThreadId(null);
+  }, [activeSessionId]);
 
   // Synchronize active thread with highlighted decision in review mode
   useEffect(() => {
